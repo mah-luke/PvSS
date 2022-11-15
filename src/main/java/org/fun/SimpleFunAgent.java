@@ -17,7 +17,9 @@ public class SimpleFunAgent<G extends Game<A, ?>, A> extends AbstractGameAgent<G
 
     @Override
     public A computeNextAction(G game, long computationTime, TimeUnit timeUnit){
-        super.setTimers(computationTime, timeUnit);
+        setTimers(computationTime, timeUnit);
+
+        log.info("Computing action...");
 
         // always use first option
         return List.copyOf(game.getPossibleActions()).get(0);
