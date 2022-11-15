@@ -26,6 +26,7 @@ dependencies {
 
     implementation(fileTree("libs").matching {
         include("*exe.jar")
+        include("*agent*.jar")
     })
 
     // manual selection (when using flatDir):
