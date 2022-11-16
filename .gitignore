@@ -2,7 +2,8 @@
 .idea
 build
 
-
-
-
-
+# LSP jdtls
+.classpath
+.project
+.settings
+bin/
