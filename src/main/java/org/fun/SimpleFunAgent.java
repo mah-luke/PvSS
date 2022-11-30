@@ -8,9 +8,7 @@ import at.ac.tuwien.ifs.sge.game.Game;
 import at.ac.tuwien.ifs.sge.util.Util;
 import at.ac.tuwien.ifs.sge.util.tree.Tree;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class SimpleFunAgent<G extends Game<A, ?>, A> extends AbstractGameAgent<G, A>
@@ -137,6 +135,117 @@ public class SimpleFunAgent<G extends Game<A, ?>, A> extends AbstractGameAgent<G
                         gameMcTreeMoveComparator
                 ).getNode().getGame().getPreviousAction();
             }
+        }
+    }
+
+    private boolean sortPromisingCandidates(Tree<McGameNode<A>> tree, Comparator<McGameNode<A>> comparator) {
+        boolean isDetermined;
+        for (isDetermined = true; !tree.isLeaf() && isDetermined; tree = tree.getChild(0)) {
+            isDetermined = tree.getChildren().stream().allMatch(
+                    c -> c.getNode().getGame().getCurrentPlayer() >= 0
+            );
+
+            if (((McGameNode<A>)tree.getNode()).getGame().getCurrentPlayer() == playerId)
+                tree.sort(comparator);
+            else
+                tree.sort(comparator.reversed());
+        }
+
+        return isDetermined && tree.getNode().getGame().isGameOver();
+    }
+
+    private Tree<McGameNode<A>> mcSelection(Tree<McGameNode<A>> tree) {
+        int depth = 0;
+
+        while (!tree.isLeaf() && (depth++ % 31 != 0 || !shouldStopComputation())) {
+            List<Tree<McGameNode<A>>> children = new ArrayList<>(tree.getChildren());
+
+            if (tree.getNode().getGame().getCurrentPlayer() < 0) {
+                A action = tree.getNode().getGame().determineNextAction();
+
+                for (Tree<McGameNode<A>> child : children) {
+                    if (((McGameNode<A>) child.getNode()).getGame().getPreviousAction().equals(action)) {
+                        tree = child;
+                        break;
+                    }
+                }
+            } else
+                tree = Collections.max(children, gameMcTreeSelectionComparator);
+        }
+
+        return tree;
+    }
+
+    private void mcExpansion(Tree<McGameNode<A>> tree) {
+        if (tree.isLeaf()) {
+            Game<A, ?> game = ((McGameNode<A>)tree.getNode()).getGame();
+            Set<A> possibleActions = game.getPossibleActions();
+
+            for (A possibleAction : possibleActions) {
+                tree.add(new McGameNode<>(game, possibleAction));
+            }
+        }
+    }
+
+    private boolean mcSimulation(Tree<McGameNode<A>> tree, int simulationAtLeast, int proportion) {
+        int simulationsDone = tree.getNode().getPlays();
+        if (simulationsDone < simulationAtLeast && shouldStopComputation(proportion)) {
+            int simulationsLeft = simulationAtLeast - simulationsDone;
+            return mcSimulation(tree, nanosLeft() / (long) simulationsLeft);
+        } else
+            return simulationsDone == 0?
+                    mcSimulation(tree, TIMEOUT / 2L - nanosElapsed()) : mcSimulation(tree);
+    }
+
+    private boolean mcSimulation(Tree<McGameNode<A>> tree) {
+        Game<A, ?> game = tree.getNode().getGame();
+        int depth = 0;
+
+        while(!game.isGameOver() && (depth++ % 31 != 0 || !shouldStopComputation())) {
+            if (game.getCurrentPlayer() < 0)
+                game = game.doAction();
+            else
+                game = game.doAction(Util.selectRandom(game.getPossibleActions(), random));
+        }
+
+        return mcHasWon(game);
+    }
+
+    private boolean mcSimulation(Tree<McGameNode<A>> tree, long timeout) {
+        long startTime = System.nanoTime();
+        Game<A, ?> game = tree.getNode().getGame();
+        int depth = 0;
+
+        while(!game.isGameOver() && System.nanoTime() - startTime <= timeout && (depth++ % 31 != 0 || !shouldStopComputation())) {
+            if (game.getCurrentPlayer() < 0)
+                game = game.doAction();
+            else
+                game = game.doAction(Util.selectRandom(game.getPossibleActions(), random));
+        }
+
+        return mcHasWon(game);
+    }
+
+    private boolean mcHasWon(Game<A, ?> game) {
+        double[] evaluation = game.getGameUtilityValue();
+        double score = Util.scoreOutOfUtility(evaluation, playerId);
+        if (!game.isGameOver() && score > 0.0) {
+            evaluation = game.getGameHeuristicValue();
+            score = Util.scoreOutOfUtility(evaluation, playerId);
+        }
+
+        boolean win = score == 1.0;
+        boolean tie = score > 0.0;
+        return win || tie && random.nextBoolean();
+    }
+
+    private void mcBackPropagation(Tree<McGameNode<A>> tree, boolean win) {
+        int depth = 0;
+
+        while (!tree.isRoot() && (depth++ % 31 != 0 || !shouldStopComputation())) {
+            tree = tree.getParent();
+            tree.getNode().incPlays();
+            if (win) tree.getNode().incWins();
         }
     }
 
