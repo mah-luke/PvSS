@@ -1,0 +1,256 @@
+!!at.ac.tuwien.ifs.sge.game.risk.configuration.RiskConfiguration
+cardTypesWithoutJoker: 3
+chooseInitialTerritories: true
+continents:
+  - {continentId: 1, troopBonus: 2}
+  - {continentId: 2, troopBonus: 5}
+  - {continentId: 3, troopBonus: 3}
+  - {continentId: 4, troopBonus: 7}
+  - {continentId: 5, troopBonus: 2}
+  - {continentId: 0, troopBonus: 5}
+fortifyOnlyFromSingleTerritory: true
+fortifyOnlyWithNonFightingArmies: false
+initialTroops: [50, 35, 30, 25, 20]
+map: |
+  zzj--------zzzn
+  zz6+-----------/8\zzzm
+  zz5/l/zs+----+zn
+  zc+--------+-----------------+-8[4]8+--+k+---+w+-----+6\1/-----------------------------+p
+  f+-------+m/a\f/2\f/n/5\m+-------+e+v\o
+  a+---/8/++-------------------+c\3+---------+4|a---\k+--+7+-+------------------+9\8[35]5\c[37]i+-------------+9
+  9/c/z1\1/8+------+4+----/1+----------+----\5/6[16]6|j\9+----+9+t/f+
+  3+----+4[0]7/f[5]d+-------++8/7|3/7|4[14]5|5+--1+6+7+j+f\9\4+j+--+h\
+  2/h/s/8/2\6/8\1/9+-------+--+4/3/6/1\5/j/8[36]8\_8+2/1\h/6+6[31]8+
+  ++6+-----------+--------------------+------+8|5\---+a+j\5/4+-----+3+---+j+k\6/1\/3+--------+2+---+6/1\3/1\8|6
+  \5++c|j/g|a\o------+---+7\a/l\k\4/8[29]8\/a+3+-+3+7+------
+  1\---+e|8[1]9/8[6]8|4[7]6\n|4[13]4|8+--------+b[18]b+------------+7\2/j+-----+4|a\5/
+  k/h/h/c|n------+---+------1/4[15]5\l/e\6/1/5/---+a|6\3+-+9+---+
+  j/-----------------+---------9|8+---+u\9+c\j+g+----+-+-----+5\2/------+7\1/3\l
+  i/j/8\8/7/z1+-------+---+----------+--+e/8[26]c/3\b++g+5\k
+  h/j/a+------+-------+z1/4[19]5/7[17]8\c+l/5\s|6+-----+
+  g/9[8]9|i___/z5/a/\h+---+7|k/7+----+5[33]7+----+3+-----/7\
+  f/k|h/z8+----+-----+2\1/+------+-+3/5\------+e+----+e\b/6\1/5+3[30]5+
+  f|d_______|6[3]9/ze|9+b\1/e\c/6\e+---------+8+6|6++/
+  f|c|n/zc+--+---+4/|c+-----+a+------+---+8+--+t\6+-+3/
+  f\c|h_____/zc/8\2/1|h/j\f\g[27]c+8\1/g
+  g\------------g/zh/a+/2+----------------+l\f+--+5+k\8+h
+  h\b|4___________|zg/c\1/i\l\9[28]8\3/1\k+p
+  i\a----/zp+-+e+9[22]a\8[32]c+---+e+-+3\j|p
+  j\b|zq/i\k\j/5\e/5+---+3+--+-------+p
+  k\5[2]4|zp/k+-------+------------+a+--+3/7+-+a+---+7\1/3|x
+  l\a\--\zk+u\c\a\2\1/a|9/5+7+4+x
+  m+--+b\zi|d[24]h+c\a\2+b+5+--+7\c\w
+  q+-----+6\za+-----+v|d\5+----+e\5\a+-+3[34]6+v
+  x\__4\8+--+v/6|v+e\5\j+5+c\8/w
+  z1\4+------+4+-----+n/7+--+r/9[21]6+-----+j\4|d+3+--+x
+  z2`-+-\i\l/c\7+-----+7+----+l/l+3+e\1/z2
+  z7\7[12]a+-+h/e\5/7\5/7\i/n\1/g+z3
+  z8\b+-+6\f/g+---+9\3/9+-------+8/p+i\z2
+  z8/8+-+3+------+d/w\1/h/8/zb\z1
+  z7+----+3/d+-----+6/y+8[20]8/8/z9+---+-----+-----------+-----------+
+  z6/6\1/k+-----+z1\f/8+za|4[39]4|b|5[40]5|
+  z6|7+s\z1+---+9+8/1\z9+---------+b+-----------+
+  z7\6|t+z|4\9\6/3\zj\9/4|
+  z8\5+--+c[10]d|z+5\9\4/5\zj\7/5|
+  z9\8+--+j+--+y/7+---------+--+7+-----+zd\5/6|
+  za\4[11]6\i|z2|k+------+6|ze\3/----+--+--+3+-+
+  zb\b\h|z2\j/5/8|zf+-+4/7\1/3\
+  zc+--+8\g+z3|h+5|4[23]4|ze/6/9+5+
+  zg\8\e/z4\7[25]9|5|8/za+---+6/h\
+  zh+--------+9+--+z6\g+5|7/za/a/c[38]6+
+  zh|9\7/zb+e/6+------+za+a+---------+9/
+  zh|a\5/zd\9+--+zp|5[41]d/9+2
+  zh|b+3/zf+7/zt|i/a|2
+  zh|5[9]6\1/zg|6/zu+-------------+3/9+-+
+  zh|d+zh+-----+zzb\1/9/5
+  zh|c/zzzz2+6+--+6
+  zh|9+-+zzzz4\4/a
+  zh+8/zzzz8+--+b
+  zi\6/zzzzo
+  zj\4+zzzzp
+  zk\4\zzzzo
+  zl\4\zzzzn
+  zm+-+2+zzzzm
+  zp\1/zzzzm
+  zq+zzzzn
+maxAttackerDice: 3
+maxDefenderDice: 2
+maxExtraBonus: 5
+maxNumberOfPlayers: 6
+missions: []
+numberOfJokers: 2
+occupyOnlyWithAttackingArmies: false
+reinforcementAtLeast: 3
+reinforcementThreshold: 3
+territories:
+  - cardType: 3
+    connects: [27, 29, 30, 31]
+    continentId: 4
+    territoryId: 33
+  - cardType: 3
+    connects: [27, 28]
+    continentId: 4
+    territoryId: 34
+  - cardType: 1
+    connects: [33, 27, 29]
+    continentId: 4
+    territoryId: 35
+  - cardType: 1
+    connects: [18, 35, 26, 27]
+    continentId: 4
+    territoryId: 36
+  - cardType: 2
+    connects: [35, 29, 31]
+    continentId: 4
+    territoryId: 37
+  - cardType: 3
+    connects: []
+    continentId: 5
+    territoryId: 38
+  - cardType: 1
+    connects: [34]
+    continentId: 5
+    territoryId: 39
+  - cardType: 3
+    connects: [38, 39]
+    continentId: 5
+    territoryId: 40
+  - cardType: 2
+    connects: [38, 39, 40]
+    continentId: 5
+    territoryId: 41
+  - cardType: 2
+    connects: []
+    continentId: 0
+    territoryId: 0
+  - cardType: 2
+    connects: [0]
+    continentId: 0
+    territoryId: 1
+  - cardType: 1
+    connects: []
+    continentId: 0
+    territoryId: 2
+  - cardType: 1
+    connects: [2]
+    continentId: 0
+    territoryId: 3
+  - cardType: 3
+    connects: []
+    continentId: 0
+    territoryId: 4
+  - cardType: 3
+    connects: [0, 1, 4]
+    continentId: 0
+    territoryId: 5
+  - cardType: 2
+    connects: [1, 3, 4, 5]
+    continentId: 0
+    territoryId: 6
+  - cardType: 2
+    connects: [3, 4, 5, 6]
+    continentId: 0
+    territoryId: 7
+  - cardType: 2
+    connects: [1, 2, 3, 6]
+    continentId: 0
+    territoryId: 8
+  - cardType: 1
+    connects: []
+    continentId: 1
+    territoryId: 9
+  - cardType: 1
+    connects: [9]
+    continentId: 1
+    territoryId: 10
+  - cardType: 3
+    connects: [9, 10]
+    continentId: 1
+    territoryId: 11
+  - cardType: 3
+    connects: [2, 10, 11]
+    continentId: 1
+    territoryId: 12
+  - cardType: 1
+    connects: []
+    continentId: 2
+    territoryId: 13
+  - cardType: 3
+    connects: [4, 13]
+    continentId: 2
+    territoryId: 14
+  - cardType: 3
+    connects: [13]
+    continentId: 2
+    territoryId: 15
+  - cardType: 1
+    connects: [13, 14, 15]
+    continentId: 2
+    territoryId: 16
+  - cardType: 1
+    connects: [15]
+    continentId: 2
+    territoryId: 17
+  - cardType: 1
+    connects: [16, 17, 15]
+    continentId: 2
+    territoryId: 18
+  - cardType: 1
+    connects: [17, 13, 15]
+    continentId: 2
+    territoryId: 19
+  - cardType: 2
+    connects: []
+    continentId: 3
+    territoryId: 20
+  - cardType: 1
+    connects: [20]
+    continentId: 3
+    territoryId: 21
+  - cardType: 3
+    connects: [17, 21]
+    continentId: 3
+    territoryId: 22
+  - cardType: 3
+    connects: [21]
+    continentId: 3
+    territoryId: 23
+  - cardType: 1
+    connects: [17, 19, 20, 22, 10]
+    continentId: 3
+    territoryId: 24
+  - cardType: 2
+    connects: [20, 21, 23]
+    continentId: 3
+    territoryId: 25
+  - cardType: 1
+    connects: [18]
+    continentId: 4
+    territoryId: 26
+  - cardType: 2
+    connects: [26]
+    continentId: 4
+    territoryId: 27
+  - cardType: 3
+    connects: [26, 27]
+    continentId: 4
+    territoryId: 28
+  - cardType: 2
+    connects: []
+    continentId: 4
+    territoryId: 29
+  - cardType: 3
+    connects: []
+    continentId: 4
+    territoryId: 30
+  - cardType: 2
+    connects: [0, 29, 30]
+    continentId: 4
+    territoryId: 31
+  - cardType: 2
+    connects: [17, 18, 21, 22, 26, 28]
+    continentId: 4
+    territoryId: 32
+tradeInBonus: [4, 6, 8, 10, 12, 15]
+withCards: true
+withMissions: false

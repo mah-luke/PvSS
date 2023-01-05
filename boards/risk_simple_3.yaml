@@ -1,0 +1,44 @@
+!!at.ac.tuwien.ifs.sge.game.risk.configuration.RiskConfiguration
+cardTypesWithoutJoker: 2
+chooseInitialTerritories: false
+continents:
+  - {continentId: 0, troopBonus: 1}
+fortifyOnlyFromSingleTerritory: true
+fortifyOnlyWithNonFightingArmies: false
+initialTroops: [3]
+map: |-
+  +-----+
+  |2[0]2|
+  +-----+
+  7\5+-----+
+  8\____|2[1]2|
+  8/4+-----+
+  7/
+  +-----+
+  |2[2]2|
+  +-----+
+maxAttackerDice: 3
+maxDefenderDice: 2
+maxExtraBonus: 1
+maxNumberOfPlayers: 2
+missions: []
+numberOfJokers: 1
+occupyOnlyWithAttackingArmies: false
+reinforcementAtLeast: 3
+reinforcementThreshold: 3
+territories:
+  - cardType: 1
+    connects: [0, 2]
+    continentId: 0
+    territoryId: 1
+  - cardType: 2
+    connects: [0, 1]
+    continentId: 0
+    territoryId: 2
+  - cardType: 1
+    connects: [1, 2]
+    continentId: 0
+    territoryId: 0
+tradeInBonus: [1]
+withCards: true
+withMissions: false
