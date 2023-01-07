@@ -1,38 +1,43 @@
-package mctsagent;
+package fun.agent;
 
 import at.ac.tuwien.ifs.sge.game.Game;
+import at.ac.tuwien.ifs.sge.game.risk.board.RiskAction;
 import at.ac.tuwien.ifs.sge.util.node.GameNode;
 
 import java.util.Objects;
 
-public class McGameNode<A> implements GameNode<A> {
-    private Game<A, ?> game;
+public class McRiskNode implements GameNode<RiskAction> {
+
+    private Game<RiskAction, ?> game;
     private int wins;
     private int plays;
 
-    public McGameNode() {
-        this((Game)null);
+    public McRiskNode() {
+        this(null);
     }
 
-    public McGameNode(Game<A, ?> game) {
+    public McRiskNode(Game<RiskAction, ?> game) {
         this(game, 0, 0);
     }
 
-    public McGameNode(Game<A, ?> game, A action) {
+    public McRiskNode(Game<RiskAction, ?> game, RiskAction action) {
         this(game.doAction(action));
     }
 
-    public McGameNode(Game<A, ?> game, int wins, int plays) {
+    public McRiskNode(Game<RiskAction, ?> game, int wins, int plays) {
         this.game = game;
         this.wins = wins;
         this.plays = plays;
     }
 
-    public Game<A, ?> getGame() {
+
+    @Override
+    public Game<RiskAction, ?> getGame() {
         return this.game;
     }
 
-    public void setGame(Game<A, ?> game) {
+    @Override
+    public void setGame(Game<RiskAction, ?> game) {
         this.game = game;
     }
 
@@ -42,10 +47,6 @@ public class McGameNode<A> implements GameNode<A> {
 
     public void setWins(int wins) {
         this.wins = wins;
-    }
-
-    public void incWins() {
-        ++this.wins;
     }
 
     public int getPlays() {
@@ -60,18 +61,27 @@ public class McGameNode<A> implements GameNode<A> {
         ++this.plays;
     }
 
+    public void incWins() {
+        ++this.wins;
+    }
+
     public boolean equals(Object o) {
         if (this == o) {
             return true;
         } else if (o != null && this.getClass() == o.getClass()) {
-            at.ac.tuwien.ifs.sge.agent.mctsagent.McGameNode<?> mcGameNode = (at.ac.tuwien.ifs.sge.agent.mctsagent.McGameNode)o;
-            return this.wins == mcGameNode.wins && this.plays == mcGameNode.plays && this.game.equals(mcGameNode.game);
+            McRiskNode other = (McRiskNode) o;
+            return this.wins == other.wins && this.plays == other.plays &&
+                    this.game.equals(other.game);
         } else {
             return false;
         }
     }
 
     public int hashCode() {
-        return Objects.hash(new Object[]{this.game, this.wins, this.plays});
+        return Objects.hash(
+                this.game,
+                this.wins,
+                this.plays
+        );
     }
 }

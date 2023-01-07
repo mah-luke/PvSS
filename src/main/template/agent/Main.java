@@ -1,16 +1,13 @@
 package old.agent;
 
 import at.ac.tuwien.ifs.sge.agent.GameAgent;
-import at.ac.tuwien.ifs.sge.agent.mctsagent.MctsAgent;
 import at.ac.tuwien.ifs.sge.engine.Logger;
 import at.ac.tuwien.ifs.sge.engine.game.MatchResult;
 import at.ac.tuwien.ifs.sge.game.Game;
 import at.ac.tuwien.ifs.sge.game.risk.board.Risk;
 import at.ac.tuwien.ifs.sge.game.risk.board.RiskAction;
 import at.ac.tuwien.ifs.sge.game.risk.board.RiskBoard;
-import org.fun.DebugMatch;
-import org.fun.LoggerFactory;
-import org.fun.SimpleFunAgent;
+
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -2,7 +2,7 @@ package old.agent;
 
 import at.ac.tuwien.ifs.sge.agent.AbstractGameAgent;
 import at.ac.tuwien.ifs.sge.agent.GameAgent;
-import at.ac.tuwien.ifs.sge.agent.mctsagent.McGameNode;
+import mctsagent.McGameNode;
 import at.ac.tuwien.ifs.sge.engine.Logger;
 import at.ac.tuwien.ifs.sge.game.Game;
 import at.ac.tuwien.ifs.sge.util.Util;
