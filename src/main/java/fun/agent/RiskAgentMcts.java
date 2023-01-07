@@ -5,6 +5,7 @@ import at.ac.tuwien.ifs.sge.agent.GameAgent;
 import at.ac.tuwien.ifs.sge.engine.Logger;
 import at.ac.tuwien.ifs.sge.game.risk.board.Risk;
 import at.ac.tuwien.ifs.sge.game.risk.board.RiskAction;
+import at.ac.tuwien.ifs.sge.game.risk.board.RiskBoard;
 
 import java.util.concurrent.TimeUnit;
 
@@ -28,6 +29,11 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction> implement
     }
 
     public RiskAction computeNextAction(Risk game, long computationTime, TimeUnit timeUnit) {
+        super.setTimers(computationTime, timeUnit); // Makes sure shouldStopComputation() works
+
+        RiskBoard board = game.getBoard();
+
+
         return null;
     }
 
