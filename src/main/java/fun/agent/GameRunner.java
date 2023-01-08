@@ -2,12 +2,17 @@ package fun.agent;
 
 import at.ac.tuwien.ifs.sge.agent.GameAgent;
 import at.ac.tuwien.ifs.sge.engine.Logger;
+import at.ac.tuwien.ifs.sge.engine.game.Match;
+import at.ac.tuwien.ifs.sge.engine.game.MatchResult;
 import at.ac.tuwien.ifs.sge.game.Game;
 import at.ac.tuwien.ifs.sge.game.risk.board.Risk;
 import at.ac.tuwien.ifs.sge.game.risk.board.RiskAction;
 import at.ac.tuwien.ifs.sge.game.risk.board.RiskBoard;
 import fun.agent.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -16,12 +21,16 @@ public class GameRunner {
 
     static final int COMP_TIME_LIMIT = 0;
     static final Logger log = LoggerFactory.getLogger(-2, "[main ");
-
     static final RiskAgentMcts riskAgentMcts = new RiskAgentMcts(log);
 
     public static void main(String[] args) {
-//        runMatch();
-        runAction();
+        log.info(Arrays.toString(args));
+        if (args.length > 0) {
+            if (args[0].equals("match"))
+                runMatch();
+            else if (args[0].equals("action"))
+                runAction();
+        }
     }
 
     public static void runAction() {
@@ -67,7 +76,28 @@ public class GameRunner {
                 Math.max(Runtime.getRuntime().availableProcessors(), 2)
         );
 
+        List<GameAgent<Risk, RiskAction>> gameAgents = new ArrayList<>();
+        gameAgents.add(agent);
+        gameAgents.add(agentOpponent);
 
+        Match<Risk, GameAgent<Risk, RiskAction>, RiskAction> match =
+                new Match<>(
+                        game,
+                        gameAgents,
+                        30,
+                        TimeUnit.SECONDS,
+                        true,
+                        LoggerFactory.getLogger(-2, "[match "),
+                        pool
+                );
+
+        MatchResult<Risk, GameAgent<Risk, RiskAction>> result = match.call();
+
+        log.info("Result string:\n" + result);
+        log.info("Results: " + Arrays.toString(result.getResult()));
+        log.info("Duration: " + result.getDuration());
+        log.info("Agents: " + result.getGameAgents());
+//        log.info("Game: " + match.getGame().getActionRecords());
 
     }
 }
