@@ -21,7 +21,13 @@ public class GameRunner {
 
     static final int COMP_TIME_LIMIT = 0;
     static final Logger log = LoggerFactory.getLogger(-2, "[main ");
-    static final RiskAgentMcts riskAgentMcts = new RiskAgentMcts(log);
+    static final RiskAgentMcts riskAgentMcts = new RiskAgentMcts(
+            LoggerFactory.getLogger(-2, "[agent ")
+    );
+
+    static final RiskAgentFun riskAgentGreedy = new RiskAgentFun(
+            LoggerFactory.getLogger(-2, "[agentOpponent ")
+    );
 
     public static void main(String[] args) {
         log.info(Arrays.toString(args));
@@ -35,13 +41,8 @@ public class GameRunner {
 
     public static void runAction() {
         Risk game = new Risk();
-
-        RiskAgentFun agent = new RiskAgentFun(
-                LoggerFactory.getLogger(
-                        -2,
-                        "[agent "
-                )
-        );
+        GameAgent<Risk, RiskAction> agent = riskAgentMcts;
+        agent.setUp(1,0);
 
         // TODO: bring game to desired state...
 
@@ -66,17 +67,14 @@ public class GameRunner {
 
     public static void runMatch() {
         Game<RiskAction, RiskBoard> game = new Risk();
-        GameAgent<Risk, RiskAction> agent = new RiskAgentFun(
-                LoggerFactory.getLogger(-2, "[agent ")
-        );
-        GameAgent<Risk, RiskAction> agentOpponent =
-                new RiskAgentFun(LoggerFactory.getLogger(-2, "[agentOpponent "));
+        GameAgent<Risk, RiskAction> agent = riskAgentMcts;
+        GameAgent<Risk, RiskAction> agentOpponent = riskAgentGreedy;
 
         ExecutorService pool = Executors.newFixedThreadPool(
                 Math.max(Runtime.getRuntime().availableProcessors(), 2)
         );
 
-        List<GameAgent<Risk, RiskAction>> gameAgents = new ArrayList<>();
+        List<GameAgent<Risk, RiskAction>> gameAgents = new ArrayList<>(2);
         gameAgents.add(agent);
         gameAgents.add(agentOpponent);
 
@@ -97,7 +95,7 @@ public class GameRunner {
         log.info("Results: " + Arrays.toString(result.getResult()));
         log.info("Duration: " + result.getDuration());
         log.info("Agents: " + result.getGameAgents());
-//        log.info("Game: " + match.getGame().getActionRecords());
+        log.info("Game: " + game.getActionRecords());
 
     }
 }

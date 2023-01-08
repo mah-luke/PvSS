@@ -8,6 +8,7 @@ import at.ac.tuwien.ifs.sge.game.risk.board.Risk;
 import at.ac.tuwien.ifs.sge.game.risk.board.RiskAction;
 import at.ac.tuwien.ifs.sge.game.risk.board.RiskBoard;
 import at.ac.tuwien.ifs.sge.util.Util;
+import at.ac.tuwien.ifs.sge.util.tree.DoubleLinkedTree;
 import at.ac.tuwien.ifs.sge.util.tree.Tree;
 
 import java.util.*;
@@ -16,9 +17,11 @@ import java.util.concurrent.TimeUnit;
 public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         implements GameAgent<Risk, RiskAction> {
 
+    private static int INSTANCE_NR_COUNTER;
     private Tree<McRiskNode> mcTree;
     private Comparator<Tree<McRiskNode>> gameMcTreeUCTComparator;
-    private final double exploitationConstant = 1d;
+    private final double exploitationConstant;
+    private final int instanceNr;
     private Comparator<McRiskNode> gameMcNodePlayComparator;
     private Comparator<Tree<McRiskNode>> gameMcTreePlayComparator;
     private Comparator<McRiskNode> gameMcNodeWinComparator;
@@ -31,6 +34,10 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
 
 
     public RiskAgentMcts(Logger log) {
+        this(Math.sqrt(2.0), log);
+    }
+
+    public RiskAgentMcts(double exploitationConstant, Logger log) {
         /* instantiates a AbstractGameAgent so that shouldStopComputation() returns true after 3/4ths of
          * the given time. However, if it can, it will try to compute at least 5 seconds.
          */
@@ -39,6 +46,9 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         //Note: log can be effectively ignored, however it honors the flags of the engine.
 
         //Do some setup before the TOURNAMENT starts.
+        this.exploitationConstant = exploitationConstant;
+        this.mcTree = new DoubleLinkedTree<>();
+        this.instanceNr = INSTANCE_NR_COUNTER++;
     }
 
     @Override
@@ -65,7 +75,8 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
 
         // Combine Comparators
         gameMcTreeSelectionComparator = gameMcTreeUCTComparator.thenComparing(gameMcTreeGameComparator);
-        gameMcNodeMoveComparator = gameMcNodePlayComparator.thenComparing(gameMcNodeWinComparator).thenComparing(gameMcNodeGameComparator);
+        gameMcNodeMoveComparator = gameMcNodePlayComparator
+                .thenComparing(gameMcNodeWinComparator).thenComparing(gameMcNodeGameComparator);
         gameMcTreeMoveComparator = (t1, t2) -> gameMcNodeMoveComparator.compare(t1.getNode(), t2.getNode());
     }
 
@@ -225,7 +236,8 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         Game<RiskAction, ?> game = tree.getNode().getGame();
         int depth = 0;
 
-        while(!game.isGameOver() && System.nanoTime() - startTime <= timeout && (depth++ % 31 != 0 || !shouldStopComputation())) {
+        while(!game.isGameOver() && System.nanoTime() - startTime <= timeout &&
+                (depth++ % 31 != 0 || !shouldStopComputation())) {
             if (game.getCurrentPlayer() < 0)
                 game = game.doAction();
             else
