@@ -66,7 +66,8 @@ public class GameRunner {
     }
 
     public static void runMatch() {
-        Game<RiskAction, RiskBoard> game = new Risk();
+//        Game<RiskAction, RiskBoard> game = new Risk();
+        Risk game = new Risk();
         GameAgent<Risk, RiskAction> agent = riskAgentMcts;
         GameAgent<Risk, RiskAction> agentOpponent = riskAgentGreedy;
 
@@ -78,15 +79,14 @@ public class GameRunner {
         gameAgents.add(agent);
         gameAgents.add(agentOpponent);
 
-        Match<Risk, GameAgent<Risk, RiskAction>, RiskAction> match =
-                new Match<>(
-                        game,
-                        gameAgents,
-                        30,
-                        TimeUnit.SECONDS,
-                        true,
-                        LoggerFactory.getLogger(-2, "[match "),
-                        pool
+        DebugMatch match = new DebugMatch(
+                    game,
+                    gameAgents,
+                    15,
+                    TimeUnit.SECONDS,
+                    true,
+                    LoggerFactory.getLogger(-2, "[match "),
+                    pool
                 );
 
         MatchResult<Risk, GameAgent<Risk, RiskAction>> result = match.call();
@@ -95,7 +95,7 @@ public class GameRunner {
         log.info("Results: " + Arrays.toString(result.getResult()));
         log.info("Duration: " + result.getDuration());
         log.info("Agents: " + result.getGameAgents());
-        log.info("Game: " + game.getActionRecords());
+        log.info("Actions: " + match.game.getActionRecords());
 
     }
 }
