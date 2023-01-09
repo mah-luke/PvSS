@@ -107,62 +107,71 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
                     .getNode()
                     .getGame()
                     .getPreviousAction();
-        } else {
-            log._trace("No");
-            log.debf_("MCTS with %d simulations at confidence %.1f%%",
-                    mcTree.getNode().getPlays(),
-                    Util.percentage(mcTree.getNode().getWins(), mcTree.getNode().getPlays())
-            );
-
-            int looped = 0;
-            int printThreshold = 1;
-
-            while (!shouldStopComputation()) {
-                if (looped++ % printThreshold == 0) {
-                    log._deb("\r");
-                    log.debf_("MCTS with %d simulations at confidence %.1f%%",
-                                mcTree.getNode().getPlays(),
-                                Util.percentage(mcTree.getNode().getWins(),
-                                mcTree.getNode().getPlays())
-                    );
-                }
-
-                Tree<McRiskNode> tree = mcSelection(mcTree);
-                mcExpansion(tree);
-                boolean won = mcSimulation(tree, 128, 2);
-                mcBackPropagation(tree, won);
-                if (printThreshold < 97)
-                    printThreshold = Math.max(
-                            1, Math.min(97, Math.round((float) mcTree.getNode().getPlays() * 11.1111111F))
-                    );
-            }
-
-            long elapsedTime = Math.max(1L, System.nanoTime() - START_TIME);
-            log._deb_("\r");
-            log.debf_("MCTS with %d simulations at confidence %.1f%%",
-                    mcTree.getNode().getPlays(),
-                    Util.percentage((mcTree.getNode()).getWins(),
-                    mcTree.getNode().getPlays())
-            );
-            log._debugf(", done in %s with %s/simulation.",
-                    Util.convertUnitToReadableString(elapsedTime, TimeUnit.NANOSECONDS, timeUnit),
-                    Util.convertUnitToReadableString(elapsedTime / (long)Math.max(1, (mcTree.getNode()).getPlays()),
-                    TimeUnit.NANOSECONDS, TimeUnit.MILLISECONDS)
-            );
-
-            if (mcTree.isLeaf()) {
-                log._debug(". Could not find a move, choosing the next best greedy option.");
-                return Collections.max(
-                        game.getPossibleActions(),
-                        (a1, a2) -> gameComparator.compare(game.doAction(a1), game.doAction(a2))
-                );
-            } else {
-                return Collections.max(
-                        mcTree.getChildren(),
-                        gameMcTreeMoveComparator
-                ).getNode().getGame().getPreviousAction();
-            }
         }
+
+        log._trace("No");
+        log.debf_("MCTS with %d simulations at confidence %.1f%%",
+                mcTree.getNode().getPlays(),
+                Util.percentage(mcTree.getNode().getWins(), mcTree.getNode().getPlays())
+        );
+
+        int looped = 0;
+        int printThreshold = 1;
+
+        // Run mcts tree creation loop until time runs out
+        while (!shouldStopComputation()) {
+            if (looped++ % printThreshold == 0) {
+                log._deb("\r");
+                log.debf_("MCTS with %d simulations at confidence %.1f%%",
+                            mcTree.getNode().getPlays(),
+                            Util.percentage(mcTree.getNode().getWins(),
+                            mcTree.getNode().getPlays())
+                );
+            }
+
+            Tree<McRiskNode> tree = mcSelection(mcTree);
+
+            if (board.isReinforcementPhase()) {
+                // Card trading is done in this phase
+                // TODO: add frontline logic -> troops at conflict
+            } else if (board.isAttackPhase()) {
+                // TODO: add one continent preference logic
+            } else if (board.isOccupyPhase()) {
+                // TODO: reinforce troops for continuation of attack?
+            } else if (board.isFortifyPhase()) {
+                // TODO: move troops to conflict / reinforce occupied territories
+            } else {
+                throw new RuntimeException("Phase unknown");
+            }
+
+            mcExpansion(tree);
+            boolean won = mcSimulation(tree, 128, 2);
+            mcBackPropagation(tree, won);
+            if (printThreshold < 97)
+                printThreshold = Math.max(
+                        1, Math.min(97, Math.round((float) mcTree.getNode().getPlays() * 11.1111111F))
+                );
+        }
+
+        log_after_mcts_creation(timeUnit);
+
+
+
+        // Return best Action of Mcts Tree
+        if (!mcTree.isLeaf()) {
+            return Collections.max(
+                    mcTree.getChildren(),
+                    gameMcTreeMoveComparator
+            ).getNode().getGame().getPreviousAction();
+        }
+
+        // Fallback to greedy otherwise
+        log._debug(". Could not find a move, choosing the next best greedy option.");
+        return Collections.max(
+                game.getPossibleActions(),
+                (a1, a2) -> gameComparator.compare(game.doAction(a1), game.doAction(a2))
+        );
+
     }
 
     private boolean sortPromisingCandidates(Tree<McRiskNode> tree, Comparator<McRiskNode> comparator) {
@@ -311,6 +320,21 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         }
 
         return w / n + c * Math.sqrt(Math.log(N) / n);
+    }
+
+    private void log_after_mcts_creation(TimeUnit timeUnit) {
+        long elapsedTime = Math.max(1L, System.nanoTime() - START_TIME);
+        log._deb_("\r");
+        log.debf_("MCTS with %d simulations at confidence %.1f%%",
+                mcTree.getNode().getPlays(),
+                Util.percentage((mcTree.getNode()).getWins(),
+                        mcTree.getNode().getPlays())
+        );
+        log._debugf(", done in %s with %s/simulation.",
+                Util.convertUnitToReadableString(elapsedTime, TimeUnit.NANOSECONDS, timeUnit),
+                Util.convertUnitToReadableString(elapsedTime / (long)Math.max(1, (mcTree.getNode()).getPlays()),
+                        TimeUnit.NANOSECONDS, TimeUnit.MILLISECONDS)
+        );
     }
 
     @Override
