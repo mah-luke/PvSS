@@ -17,6 +17,14 @@ import java.util.concurrent.TimeUnit;
 public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         implements GameAgent<Risk, RiskAction> {
 
+    /*
+    TODO: rewrite MCTS to use scalar values instead of boolean for T
+
+    TODO:
+
+
+     */
+
     private static int INSTANCE_NR_COUNTER;
     private Tree<McRiskNode> mcTree;
     private Comparator<Tree<McRiskNode>> gameMcTreeUCTComparator;
@@ -119,8 +127,7 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
                     );
                 }
 
-                Tree<McRiskNode> tree = mcTree;
-                tree = mcSelection(tree);
+                Tree<McRiskNode> tree = mcSelection(mcTree);
                 mcExpansion(tree);
                 boolean won = mcSimulation(tree, 128, 2);
                 mcBackPropagation(tree, won);
@@ -207,6 +214,13 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         }
     }
 
+    /**
+     * Base mcSimulation calling the other mcSimulations
+     * @param tree
+     * @param simulationAtLeast
+     * @param proportion
+     * @return
+     */
     private boolean mcSimulation(Tree<McRiskNode> tree, int simulationAtLeast, int proportion) {
         int simulationsDone = tree.getNode().getPlays();
         if (simulationsDone < simulationAtLeast && shouldStopComputation(proportion)) {
@@ -247,9 +261,24 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         return mcHasWon(game);
     }
 
+    /**
+     * Decides whether player has won the game.
+     * @param game
+     * @return
+     */
     private boolean mcHasWon(Game<RiskAction, ?> game) {
+
+        // array with 1 for win and 0 otherwise
         double[] evaluation = game.getGameUtilityValue();
+
+        // val = evaluation[playerId], n = evaluation.length, max = max(evaluation - val)
+        // (val >= max? 1/n : 0) + (val > max? (n-1)/n : 0)
+        //
+        // val <  max   => 0    -> Loose
+        // val == max   => 1/n  -> Tie
+        // val >  max   => 1    -> Win
         double score = Util.scoreOutOfUtility(evaluation, playerId);
+
         if (!game.isGameOver() && score > 0.0) {
             evaluation = game.getGameHeuristicValue();
             score = Util.scoreOutOfUtility(evaluation, playerId);
@@ -257,6 +286,8 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
 
         boolean win = score == 1.0;
         boolean tie = score > 0.0;
+
+        // Return true for ~50% of all ties and every win
         return win || tie && random.nextBoolean();
     }
 
