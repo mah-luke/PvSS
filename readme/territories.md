@@ -43,7 +43,7 @@
 |  35 | Siberia               | Infantry   | [27, 29, 33, 36, 37]     |
 |  36 | Ural                  | Infantry   | [18, 26, 27, 35]         |
 |  37 | Yakutsk               | Artillery  | [29, 31, 35]             |
-|   5 | Austrialia            | 2          |                          |
+|   5 | Australia             | 2          |                          |
 |  38 | Eastern Australia     | Cavalry    | [40, 41]                 |
 |  39 | Indonesia             | Infantry   | [34,40, 41]              |
 |  40 | New Guinea            | Cavalry    | [38, 39]                 |
