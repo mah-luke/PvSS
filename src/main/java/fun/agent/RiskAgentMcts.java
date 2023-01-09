@@ -147,7 +147,7 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
             log._debugf(", done in %s with %s/simulation.",
                     Util.convertUnitToReadableString(elapsedTime, TimeUnit.NANOSECONDS, timeUnit),
                     Util.convertUnitToReadableString(elapsedTime / (long)Math.max(1, (mcTree.getNode()).getPlays()),
-                    TimeUnit.NANOSECONDS, TimeUnit.NANOSECONDS)
+                    TimeUnit.NANOSECONDS, TimeUnit.MILLISECONDS)
             );
 
             if (mcTree.isLeaf()) {
@@ -206,6 +206,7 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
     private void mcExpansion(Tree<McRiskNode> tree) {
         if (tree.isLeaf()) {
             Game<RiskAction, ?> game = tree.getNode().getGame();
+            // TODO smarter expansion, don't add all
             Set<RiskAction> possibleActions = game.getPossibleActions();
 
             for (RiskAction possibleAction : possibleActions) {
