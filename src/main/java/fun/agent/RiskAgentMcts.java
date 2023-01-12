@@ -134,34 +134,12 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
             }
 
             Tree<McRiskNode> tree = mcSelection(mcTree);
-            // Set-Up Phase at the beginning of the game, as long as free territories exist.
 
-            if (board.isPlayerStillAlive(-1)) return chooseSetupAction(board);
-
-
-            if (board.isReinforcementPhase()) {
-                // Card trading is done in this phase
-                // If incremental, trade in as late as possible. Prefer territories agent occupies for extra troops.
-                // TODO: add frontline logic -> troops at conflict
-                // Set troops so that continents can be conquered for bonus.
-            } else if (board.isAttackPhase()) {
-                // TODO: add one continent preference logic
-                // Prefer to conquer continents for bonus.
-                // Even attack if attacking territory has less troops than defending territory.
-                // Don't unblock enemy territory with many troops.
-                // Always attack if 2v1, 3v1, 3v2.
-                /*
-                for territory in
-                 */
-            } else if (board.isOccupyPhase()) {
-                // TODO: reinforce troops for continuation of attack?
-            } else if (board.isFortifyPhase()) {
-                // TODO: move troops to conflict / reinforce occupied territories
-                // Simple approach: sort occupied territories descending by troop count.
-                // If territory has conflict (any neighbor is occupied by different player) do nothing.
-                // If territory has only neighbors of own player, move them.
-            } else {
-                throw new RuntimeException("Phase unknown");
+            // Territory Selection Phase at the beginning of the game.
+            // Quasi "opening book".
+            if (board.isPlayerStillAlive(-1)) {
+                RiskAction chosenAction = chooseSetupAction(game);
+                if (chosenAction != null) return chosenAction;
             }
 
             mcExpansion(tree);
@@ -196,37 +174,70 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
 
     private RiskAction chooseSetupAction(Risk game) {
         log.info("Board not yet fully occupied");
-        // TODO go for specific territories
-        // Check if continent has <  free territories and no territories of player.
 
+        // Check if continent has < 3 free territories and no territories of playerId.
         for (Integer continentId : game.getBoard().getContinentIds()) {
-            if (getOccupiedTerritories(-1, continentId, game.getBoard()).size() < 3 &&
+            Set<Integer> freeTerritories = getOccupiedTerritories(-1, continentId, game.getBoard());
+            if (freeTerritories.size() < 3 &&
                     getOccupiedTerritories(playerId, continentId, game.getBoard()).size() == 0
             )
                 // select action that sets an army in an empty territory in continentId
-                for (RiskAction action : game.getPossibleActions()) {
-                   if (continentTerritories.get(continentId).contains(action.selected()))
-                       return action;
+                for (Integer territory: freeTerritories){
+                    // TODO Don't take first option and choose better?
+                    RiskAction action = RiskAction.select(territory);
+                    if (game.isValidAction(action)) {
+                        return action;
+                    }
+                    else throw new RuntimeException("Not valid action.");
                 }
         }
-        continentTerritories.forEach((continentId, territory) -> {
-
-        });
-            /* for continentId in continents:
-                  if (counter(player(-1)) <= 2 && counter(player(playerId)) == 0) {
-                        return set troop to free territory on continent
-                  }
-            */
 
         // Central America most important?
-        // go for South America
-            /* for territory in SouthAmerica:
-                  if (board.getTerritoryOccupantId(territory) == -1) {
-                      return set troop to territory
-                  }
-            */
-        // go for North America
-        // Same as South America?
+        // Go for South America, then North America
+        int[] territoryPriority = {10, 9, 11, 12, 2, 0, 1, 2, 3, 4, 5, 6, 7, 8}; //TODO fine-tune priority
+        for (int territoryId: territoryPriority) {
+            if (game.getBoard().getTerritoryOccupantId(territoryId) == -1) {
+                RiskAction action = RiskAction.select(territoryId);
+                if (game.isValidAction(action)) {
+                    return action;
+                }
+                else throw new RuntimeException("Not valid action.");
+            }
+        }
+        return null;
+    }
+
+    private Set<RiskAction> chooseReinforcementAction(Risk game) {
+        log.info("Reinforcement Phase");
+        // TODO: add frontline logic -> troops at conflict
+        // Card trading is done in this phase
+        // If incremental, trade in as late as possible. Prefer territories agent occupies for extra troops.
+        // Set troops so that continents can be conquered for bonus.
+        return null;
+    }
+
+    private Set<RiskAction> chooseAttackAction(Risk game) {
+        log.info("Reinforcement Phase");
+        // TODO: add one continent preference logic
+        // Prefer to conquer continents for bonus.
+        // Don't unblock enemy territory which has many troops.
+        // Always attack if 2v1, 3v1, 3v2.
+        // Even attack if attacking territory has less troops than defending territory.
+        return null;
+    }
+    private Set<RiskAction> chooseOccupyAction(Risk game) {
+        log.info("Reinforcement Phase");
+        // TODO: Reinforce troops for continuation of attack?
+        return null;
+    }
+
+    private Set<RiskAction> chooseFortifyAction(Risk game) {
+        log.info("Reinforcement Phase");
+        // TODO: Move troops to conflict/reinforce occupied territories.
+        // Simple approach: sort occupied territories descending by troop count.
+        // If territory has conflict (any neighbor is occupied by different player) do nothing.
+        // If territory has only neighbors of own player, move them.
+        return null;
     }
 
     /**
@@ -298,10 +309,27 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
     }
 
     private void mcExpansion(Tree<McRiskNode> tree) {
+        Set<RiskAction> possibleActions;
+        Risk game = (Risk) tree.getNode().getGame();
+        RiskBoard board = game.getBoard();
+
         if (tree.isLeaf()) {
-            Game<RiskAction, ?> game = tree.getNode().getGame();
             // TODO smarter expansion, don't add all
-            Set<RiskAction> possibleActions = game.getPossibleActions();
+            if (board.isReinforcementPhase()) {
+                possibleActions = chooseReinforcementAction(game);
+            } else if (board.isAttackPhase()) {
+                possibleActions = chooseAttackAction(game);
+            } else if (board.isOccupyPhase()) {
+                possibleActions = chooseOccupyAction(game);
+            } else if (board.isFortifyPhase()) {
+                possibleActions = chooseFortifyAction(game);
+            } else {
+                // TODO: Remove RuntimeException on deployment.
+                throw new RuntimeException("Phase unknown");
+                // Fallback
+                // possibleActions = game.getPossibleActions();
+            }
+
 
             for (RiskAction possibleAction : possibleActions) {
                 tree.add(new McRiskNode(game, possibleAction));
