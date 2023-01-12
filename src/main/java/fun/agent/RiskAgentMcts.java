@@ -4,15 +4,14 @@ import at.ac.tuwien.ifs.sge.agent.AbstractGameAgent;
 import at.ac.tuwien.ifs.sge.agent.GameAgent;
 import at.ac.tuwien.ifs.sge.engine.Logger;
 import at.ac.tuwien.ifs.sge.game.Game;
-import at.ac.tuwien.ifs.sge.game.risk.board.Risk;
-import at.ac.tuwien.ifs.sge.game.risk.board.RiskAction;
-import at.ac.tuwien.ifs.sge.game.risk.board.RiskBoard;
+import at.ac.tuwien.ifs.sge.game.risk.board.*;
 import at.ac.tuwien.ifs.sge.util.Util;
 import at.ac.tuwien.ifs.sge.util.tree.DoubleLinkedTree;
 import at.ac.tuwien.ifs.sge.util.tree.Tree;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         implements GameAgent<Risk, RiskAction> {
@@ -39,6 +38,8 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
     private Comparator<Tree<McRiskNode>> gameMcTreeSelectionComparator;
     private Comparator<McRiskNode> gameMcNodeMoveComparator;
     private Comparator<Tree<McRiskNode>> gameMcTreeMoveComparator;
+
+    private Map<Integer, Set<RiskTerritory>> continentTerritories;
 
 
     public RiskAgentMcts(Logger log) {
@@ -93,6 +94,9 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
 
         RiskBoard board = game.getBoard();
 
+        if (continentTerritories == null) continentTerritories = loadContinentTerritories(board);
+
+
         log.tra_("Searching for root of tree");
         boolean foundRoot = Util.findRoot(mcTree, game);
 
@@ -130,16 +134,32 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
             }
 
             Tree<McRiskNode> tree = mcSelection(mcTree);
+            // Set-Up Phase at the beginning of the game, as long as free territories exist.
+
+            if (board.isPlayerStillAlive(-1)) return chooseSetupAction(board);
+
 
             if (board.isReinforcementPhase()) {
                 // Card trading is done in this phase
+                // If incremental, trade in as late as possible. Prefer territories agent occupies for extra troops.
                 // TODO: add frontline logic -> troops at conflict
+                // Set troops so that continents can be conquered for bonus.
             } else if (board.isAttackPhase()) {
                 // TODO: add one continent preference logic
+                // Prefer to conquer continents for bonus.
+                // Even attack if attacking territory has less troops than defending territory.
+                // Don't unblock enemy territory with many troops.
+                // Always attack if 2v1, 3v1, 3v2.
+                /*
+                for territory in
+                 */
             } else if (board.isOccupyPhase()) {
                 // TODO: reinforce troops for continuation of attack?
             } else if (board.isFortifyPhase()) {
                 // TODO: move troops to conflict / reinforce occupied territories
+                // Simple approach: sort occupied territories descending by troop count.
+                // If territory has conflict (any neighbor is occupied by different player) do nothing.
+                // If territory has only neighbors of own player, move them.
             } else {
                 throw new RuntimeException("Phase unknown");
             }
@@ -172,6 +192,71 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
                 (a1, a2) -> gameComparator.compare(game.doAction(a1), game.doAction(a2))
         );
 
+    }
+
+    private RiskAction chooseSetupAction(Risk game) {
+        log.info("Board not yet fully occupied");
+        // TODO go for specific territories
+        // Check if continent has <  free territories and no territories of player.
+
+        for (Integer continentId : game.getBoard().getContinentIds()) {
+            if (getOccupiedTerritories(-1, continentId, game.getBoard()).size() < 3 &&
+                    getOccupiedTerritories(playerId, continentId, game.getBoard()).size() == 0
+            )
+                // select action that sets an army in an empty territory in continentId
+                for (RiskAction action : game.getPossibleActions()) {
+                   if (continentTerritories.get(continentId).contains(action.selected()))
+                       return action;
+                }
+        }
+        continentTerritories.forEach((continentId, territory) -> {
+
+        });
+            /* for continentId in continents:
+                  if (counter(player(-1)) <= 2 && counter(player(playerId)) == 0) {
+                        return set troop to free territory on continent
+                  }
+            */
+
+        // Central America most important?
+        // go for South America
+            /* for territory in SouthAmerica:
+                  if (board.getTerritoryOccupantId(territory) == -1) {
+                      return set troop to territory
+                  }
+            */
+        // go for North America
+        // Same as South America?
+    }
+
+    /**
+     * Return the number of territories occupied by playerId for continentId.
+     *
+     * @param playerId
+     * @param continentId
+     * @param board
+     * @return
+     */
+    private Set<Integer> getOccupiedTerritories(int playerId, int continentId, RiskBoard board) {
+        return board.getTerritoriesOccupiedByPlayer(playerId).stream().filter(
+                    terrId -> board.getTerritories().get(terrId).getContinentId() == continentId
+                ).collect(Collectors.toSet());
+    }
+
+    private Map<Integer, RiskTerritory> loadConnectedTerritories(RiskBoard board) {
+        Map<Integer, Set<RiskTerritory>> map new HashMap<>(board.getTerritories().size());
+
+
+        board.neighboringTerritories(12);
+        throw new RuntimeException("Don't call this method");
+    }
+
+    private Map<Integer, Set<RiskTerritory>> loadContinentTerritories(RiskBoard board) {
+        Map<Integer, Set<RiskTerritory>> map = new HashMap<>(6);
+
+        board.getTerritories().forEach((territoryId, territory) ->
+                map.computeIfAbsent(territory.getContinentId(), k -> new HashSet<>()).add(territory));
+        return map;
     }
 
     private boolean sortPromisingCandidates(Tree<McRiskNode> tree, Comparator<McRiskNode> comparator) {
