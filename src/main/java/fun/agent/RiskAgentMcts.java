@@ -244,7 +244,7 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
     }
 
     private Map<Integer, RiskTerritory> loadConnectedTerritories(RiskBoard board) {
-        Map<Integer, Set<RiskTerritory>> map new HashMap<>(board.getTerritories().size());
+        Map<Integer, Set<RiskTerritory>> map = new HashMap<>(board.getTerritories().size());
 
 
         board.neighboringTerritories(12);
