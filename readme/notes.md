@@ -52,22 +52,43 @@ Probability that the attacker wins
 ## Heuristics
 
 ### Set-Up Phase (beginning of game)
-- Try to go for South America, then North America
-- Prevent continent bonus for enemy
+- [x] Try to go for South America, then North America
+- [x] Prevent continent bonus for enemy
+- [ ] Central America most important?
+- [ ] fine-tune priority of territories
 
 ### Reinforcement Phase
-- Trade cards as early/late as possible?
-- Reinforce troops at borders
-- Avoid reinforcing territories containing less than 3 troops
-- Reinforce regions connected to multiple enemy territories
+- [ ] Trade cards as early/late as possible?
+- [ ] Reinforce troops at borders
+- [ ] Avoid reinforcing territories containing less than 3 troops
+- [ ] Reinforce regions connected to multiple enemy territories
 
 ### Attack Phase
-- Always attack if one has >=3 attackers, until troops left is close to 3.
-- Best attacks are 3v1 and 2v1.
-- Avoid attacking territories next to large stacks.
+- [ ] Always attack if one has >=3 attackers, until troops left is close to 3.
+- [ ] Best attacks are 3v1 and 2v1.
+- [ ] Avoid attacking territories next to large stacks.
 
 ### Occupy Phase
-- Move with how many troops?
+- [ ] Move with how many troops?
 
 ### Fortify Phase
-- Move troops to conflict territories
+- [ ] Move troops to conflict territories
+
+
+
+## Game Plan
+
+### Strategy
+#### Setup Phase
+- Focus on South America, then go for North America.
+- Prevent any continent bonus in the first round.
+
+#### Main Phase
+- Conquer South America, then North America.
+- Fortify Alaska heavily to prevent any breakthrough?
+
+
+### Tactics
+- Always reinforce borders
+- Never reinforce territory with only friendly neighbours.
+- 

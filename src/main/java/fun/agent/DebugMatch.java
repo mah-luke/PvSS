@@ -3,7 +3,6 @@ package fun.agent;
 import at.ac.tuwien.ifs.sge.agent.GameAgent;
 import at.ac.tuwien.ifs.sge.engine.Logger;
 import at.ac.tuwien.ifs.sge.engine.game.Match;
-import at.ac.tuwien.ifs.sge.game.Game;
 import at.ac.tuwien.ifs.sge.game.risk.board.Risk;
 import at.ac.tuwien.ifs.sge.game.risk.board.RiskAction;
 
@@ -15,7 +14,7 @@ public class DebugMatch extends Match<Risk, GameAgent<Risk, RiskAction>, RiskAct
 
     public Risk game;
     public List<GameAgent<Risk, RiskAction>> gameAgents;
-    public DebugMatch(Risk game,
+    public DebugMatch( Risk game,
                       List<GameAgent<Risk,
                               RiskAction>> gameAgents,
                       long computationTime,
