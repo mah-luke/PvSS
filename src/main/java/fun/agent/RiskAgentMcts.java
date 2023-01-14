@@ -223,29 +223,30 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         // Hard-code South America, North America?
 
         Risk game = (Risk) tree.getNode().getGame();
-
-        if (game.getBoard().isPlayerStillAlive(-1)) {// TODO: add logic for setup phase after opening book
-            return;
-        }
-
-        // TODO: check error if no enemy territories available??
-
         Set<RiskAction> actions = game.getPossibleActions();
-        Stream<RiskAction> filteredActions = actions.stream()
+        Set<RiskAction> filteredActions;
+
+        if (game.getBoard().isPlayerStillAlive(-1)) // TODO: add logic for setup phase after opening book
+            return;
+
+        // Trade if you have to
+        if (game.getBoard().hasToTradeInCards(game.getCurrentPlayer())) return;
+
+        filteredActions = actions.stream()
+                // filter out trade in actions
+                .filter(action -> action.reinforcedId() >= 0)
                 // Only keep territories with enemy neighbor.
-                .filter(action -> game.getBoard().neighboringEnemyTerritories(action.reinforcedId()).size() > 0);
+                .filter(action -> game.getBoard().neighboringEnemyTerritories(action.reinforcedId()).size() > 0)
+                .collect(Collectors.toSet());
 
 
 
-
-        Set<RiskAction> filteredSet = filteredActions.collect(Collectors.toSet());
-        for (RiskAction action : filteredSet) {
+        for (RiskAction action : filteredActions) {
             int wins = 0;
             int plays = 0;
             // TODO bias more promising moves here
             if (wins > plays) wins = plays;
             tree.add(new McRiskNode(tree.getNode().getGame().doAction(action), wins, plays));
-
         }
     }
 
