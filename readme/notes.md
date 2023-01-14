@@ -59,20 +59,21 @@ Probability that the attacker wins
 
 ### Reinforcement Phase
 - [ ] Trade cards as early/late as possible?
-- [ ] Reinforce troops at borders
+- [x] Reinforce troops at borders
 - [ ] Avoid reinforcing territories containing less than 3 troops
 - [ ] Reinforce regions connected to multiple enemy territories
 
 ### Attack Phase
-- [ ] Always attack if one has >=3 attackers, until troops left is close to 3.
-- [ ] Best attacks are 3v1 and 2v1.
+- [x] Always attack if one has >=3 attackers, until troops left is close to 3.
+- [x] Best attacks are 3v1 and 2v1.
 - [ ] Avoid attacking territories next to large stacks.
+- [ ] Conquer at least one territory for card bonus.
 
 ### Occupy Phase
-- [ ] Move with how many troops?
+- [x] Move with how many troops?
 
 ### Fortify Phase
-- [ ] Move troops to conflict territories
+- [x] Move troops to conflict territories
 
 
 

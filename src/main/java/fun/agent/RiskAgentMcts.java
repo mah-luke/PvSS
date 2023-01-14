@@ -8,6 +8,7 @@ import at.ac.tuwien.ifs.sge.game.risk.board.*;
 import at.ac.tuwien.ifs.sge.util.Util;
 import at.ac.tuwien.ifs.sge.util.tree.DoubleLinkedTree;
 import at.ac.tuwien.ifs.sge.util.tree.Tree;
+import org.checkerframework.checker.nullness.Opt;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -224,22 +225,44 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
 
         Risk game = (Risk) tree.getNode().getGame();
         Set<RiskAction> actions = game.getPossibleActions();
-        Set<RiskAction> filteredActions;
 
         if (game.getBoard().isPlayerStillAlive(-1)) // TODO: add logic for setup phase after opening book
             return;
 
-        // Trade if you have to
+        // Trade-in only if you have to
         if (game.getBoard().hasToTradeInCards(game.getCurrentPlayer())) return;
 
-        filteredActions = actions.stream()
-                // filter out trade in actions
-                .filter(action -> action.reinforcedId() >= 0)
-                // Only keep territories with enemy neighbor.
-                .filter(action -> game.getBoard().neighboringEnemyTerritories(action.reinforcedId()).size() > 0)
+        // TODO If player is close to conquering continent, try to set more troops there.
+
+        // Calculate # border territories
+        Set<Integer> territoryBorder = game.getBoard().getTerritoriesOccupiedByPlayer(playerId).stream()
+                .filter(t -> game.getBoard().neighboringEnemyTerritories(t).size() > 0)
+                .collect(Collectors.toSet());
+        Set<RiskAction> specialActions = actions.stream()
+                .filter(action -> !filterSpecialActions(action))
                 .collect(Collectors.toSet());
 
+        int max;
+        Optional<RiskAction> maxReinforcement = (actions.stream()
+                .filter(this::filterSpecialActions)
+                .max(Comparator.comparingInt(RiskAction::troops)));
 
+        if (maxReinforcement.isPresent())
+           max = maxReinforcement.get().troops();
+        else max = 0;
+
+        Set<RiskAction> filteredActions = actions.stream()
+                .filter(this::filterSpecialActions)
+                // Only reinforce territories with enemy neighbor.
+                .filter(action -> game.getBoard().neighboringEnemyTerritories(action.reinforcedId()).size() > 0)
+                // Reinforce some territories more heavily instead of spreading out.
+                .filter(action ->
+                        (action.troops() >= continentUtility(game)[game.getCurrentPlayer()] / territoryBorder.size()) ||
+                                (action.troops() == max))
+                .collect(Collectors.toSet());
+        // Add all actions if no filteredAction left.
+        if (filteredActions.size() == 0)
+            filteredActions.add(RiskAction.endPhase());
 
         for (RiskAction action : filteredActions) {
             int wins = 0;
@@ -263,6 +286,7 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
 
         Set<RiskAction> actions = game.getPossibleActions();
         Set<RiskAction> filteredActions = actions.stream()
+                .filter(this::filterSpecialActions)
                 // Always attack with maximum amount of troops.
                 .filter(action -> action.troops() == board.getMaxAttackingTroops(action.attackingId()))
                 // Only keep actions where attackingTroops > defendingTroops.
@@ -270,8 +294,7 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
                         Math.min(2, board.getTerritoryTroops(action.defendingId())))
                 .collect(Collectors.toSet());
         // Add endPhase() if no attack left.
-        if (filteredActions.size() == 0)
-            filteredActions = new HashSet<>(Collections.singletonList(RiskAction.endPhase()));
+        if (filteredActions.size() == 0) filteredActions.add(RiskAction.endPhase());
 
         for (RiskAction action : filteredActions) {
             int wins = 0;
@@ -286,14 +309,71 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
     private void chooseOccupyActions(Tree<McRiskNode> tree) {
         log.trace("Occupy Phase");
         // TODO: Reinforce troops for continuation of attack?
+
+        Risk game = (Risk) tree.getNode().getGame();
+
+        Set<RiskAction> actions = game.getPossibleActions();
+        Set<RiskAction> filteredActions = new HashSet<>();
+
+        Optional<RiskAction> optimalAction = actions.stream()
+                // Always move with max amount of troops.
+                .max(Comparator.comparingInt(RiskAction::troops));
+        optimalAction.ifPresent(filteredActions::add);
+
+        if (filteredActions.size() == 0 ) {
+            filteredActions.addAll(actions);
+            log.err("OccupyActions filteredActions.size() == 0");
+        }
+
+        for (RiskAction action : filteredActions) {
+            int wins = 0;
+            int plays = 0;
+            // TODO bias more promising moves here
+            if (wins > plays) wins = plays;
+            tree.add(new McRiskNode(tree.getNode().getGame().doAction(action), wins, plays));
+        }
     }
 
     private void chooseFortifyActions(Tree<McRiskNode> tree) {
         log.trace("Fortify Phase");
-        // TODO: Move troops to conflict/reinforce occupied territories.
-        // Simple approach: sort occupied territories descending by troop count.
-        // If territory has conflict (any neighbor is occupied by different player) do nothing.
-        // If territory has only neighbors of own player, move them.
+        // Move troops from fortifyingId to fortifiedId.
+
+        Risk game = (Risk) tree.getNode().getGame();
+        RiskBoard board = game.getBoard();
+
+        Set<RiskAction> actions = game.getPossibleActions();
+        // Filter out special actions.
+         Set<RiskAction> specialActions = actions.stream()
+                 .filter(action -> !filterSpecialActions(action))
+                 .collect(Collectors.toSet());
+        Set<RiskAction> filteredActions = new HashSet<>();
+
+        // Prune actions.
+         Optional<RiskAction> optimalAction = actions.stream()
+                 .filter(this::filterSpecialActions)
+                 // Only keep actions where fortifyingId has friendly neighbours.
+                 .filter(action -> board.neighboringEnemyTerritories(action.fortifyingId()).size() == 0)
+                 // Only keep actions where fortifiedId has at least one enemy neighbor.
+                 // TODO Relax condition to move troops from way behind to front lines over multiple moves?
+                 .filter(action -> board.neighboringEnemyTerritories(action.fortifiedId()).size() > 0)
+                 // Move max amount of troops.
+                 .max(Comparator.comparingInt(RiskAction::troops));
+        optimalAction.ifPresent(filteredActions::add);
+
+        // Add special actions.
+        if (filteredActions.size() == 0) filteredActions.add(RiskAction.endPhase());
+
+        for (RiskAction action : filteredActions) {
+            int wins = 0;
+            int plays = 0;
+            // TODO bias more promising moves here
+            if (wins > plays) wins = plays;
+            tree.add(new McRiskNode(tree.getNode().getGame().doAction(action), wins, plays));
+        }
+    }
+
+    private boolean filterSpecialActions(RiskAction action) {
+        return !(action.attackingId() < -1 || action.defendingId() < 0);
     }
 
     /**
@@ -397,7 +477,7 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
     }
 
     /**
-     * Base mcSimulation calling the other mcSimulations
+     * Base mcSimulation calling the othermcSimulations
      * @param tree
      * @param simulationAtLeast
      * @param proportion
@@ -462,17 +542,8 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         double score = Util.scoreOutOfUtility(evaluation, playerId);
 
         if (!game.isGameOver() && score > 0.0) {
-            for (int i = 0; i < game.getNumberOfPlayers(); i++) {
-
-                evaluation[i] = game.getBoard().getNrOfTerritoriesOccupiedByPlayer(i) / 3;
-
-                for (int continent: game.getBoard().getContinentIds()) {
-                    if (continentConquered(i, continent, game)) {
-                        evaluation[i] += game.getBoard().getContinentBonus(continent);
-                    }
-                }
-            }
             // calculate evaluation = territories / 3 + continentBonuses
+            evaluation = continentUtility(game);
             score = Util.scoreOutOfUtility(evaluation, playerId);
         }
 
@@ -481,6 +552,23 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
 
         // Return true for ~50% of all ties and every win
         return win || tie && random.nextBoolean();
+    }
+
+    @SuppressWarnings("IntegerDivisionInFloatingPointContext")
+    private double[] continentUtility(Risk game) {
+        double[] evaluation  = new double[game.getNumberOfPlayers()];
+
+        for(int i = 0; i < game.getNumberOfPlayers(); i++) {
+            evaluation[i] = game.getBoard().getNrOfTerritoriesOccupiedByPlayer(i) / 3;
+
+            for (int continent: game.getBoard().getContinentIds()) {
+                if (continentConquered(i, continent, game)) {
+                    evaluation[i] += game.getBoard().getContinentBonus(continent);
+                }
+            }
+
+        }
+        return evaluation;
     }
 
     private boolean continentConquered(int player, int continent, Risk game) {
