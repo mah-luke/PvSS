@@ -91,4 +91,9 @@ Probability that the attacker wins
 ### Tactics
 - Always reinforce borders
 - Never reinforce territory with only friendly neighbours.
-- 
+
+## Summary
+- PDF One-page description of the implemented methods, ideas, references, etc.
+- Name of the game engine
+- student contact data
+- any data that is necessary to identify the project as yours
