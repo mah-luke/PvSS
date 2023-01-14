@@ -132,7 +132,7 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
 
         // Run mcts tree creation loop until time runs out
         while (!shouldStopComputation()) {
-            if (looped++ % printThreshold == 0) {
+           if (looped++ % printThreshold == 0) {
                 log._deb("\r");
                 log.debf_("MCTS with %d simulations at confidence %.1f%%",
                             mcTree.getNode().getPlays(),
@@ -156,17 +156,19 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
 
         // Return best Action of Mcts Tree
         if (!mcTree.isLeaf()) {
-            return Collections.max(
+            RiskAction bestAction = Collections.max(
                     mcTree.getChildren(),
                     gameMcTreeMoveComparator
             ).getNode().getGame().getPreviousAction();
+            return bestAction;
         }
 
         // Fallback to greedy otherwise
         log._debug(". Could not find a move, choosing the next best greedy option.");
+        Risk finalGame = game;
         return Collections.max(
                 game.getPossibleActions(),
-                (a1, a2) -> gameComparator.compare(game.doAction(a1), game.doAction(a2))
+                (a1, a2) -> gameComparator.compare(finalGame.doAction(a1), finalGame.doAction(a2))
         );
     }
 
@@ -208,7 +210,7 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         return null;
     }
 
-    private Set<RiskAction> chooseReinforcementActions(Risk game) {
+    private void chooseReinforcementActions(Tree<McRiskNode> tree) {
         log.trace("Reinforcement Phase");
         // TODO: add front-line logic -> troops at conflict
         // Card trading is done in this phase
@@ -216,48 +218,81 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         // Set troops so that continents can be conquered for bonus.
 
         // Check which continent has many of playerId territories. Prioritize to conquer this continent.
-        // Optional set priority of continents (South America > North America > ... ),
+        // Optional set priority of continents (South America > North America > ...),
         // depending on territory count within continent.
         // Hard-code South America, North America?
 
-        if (game.getBoard().isPlayerStillAlive(-1)) {
-            // TODO: add logic for setup phase
-            return null;
+        Risk game = (Risk) tree.getNode().getGame();
+
+        if (game.getBoard().isPlayerStillAlive(-1)) {// TODO: add logic for setup phase after opening book
+            return;
         }
+
+        // TODO: check error if no enemy territories available??
 
         Set<RiskAction> actions = game.getPossibleActions();
         Stream<RiskAction> filteredActions = actions.stream()
+                // Only keep territories with enemy neighbor.
                 .filter(action -> game.getBoard().neighboringEnemyTerritories(action.reinforcedId()).size() > 0);
 
-        List<RiskAction> filteredList = filteredActions.collect(Collectors.toList());
 
 
 
-        return null;
+        Set<RiskAction> filteredSet = filteredActions.collect(Collectors.toSet());
+        for (RiskAction action : filteredSet) {
+            int wins = 0;
+            int plays = 0;
+            // TODO bias more promising moves here
+            if (wins > plays) wins = plays;
+            tree.add(new McRiskNode(tree.getNode().getGame().doAction(action), wins, plays));
+
+        }
     }
 
-    private Set<RiskAction> chooseAttackActions(Risk game) {
+    private void chooseAttackActions(Tree<McRiskNode> tree) {
         log.trace("Attack Phase");
         // TODO: add one continent preference logic
         // Prefer to conquer continents for bonus.
         // Don't unblock enemy territory which has many troops.
         // Always attack if 2v1, 3v1, 3v2.
         // Even attack if attacking territory has less troops than defending territory.
-        return null;
-    }
-    private Set<RiskAction> chooseOccupyActions(Risk game) {
-        log.trace("Occupy Phase");
-        // TODO: Reinforce troops for continuation of attack?
-        return null;
+
+        Risk game = (Risk) tree.getNode().getGame();
+        RiskBoard board = game.getBoard();
+
+        Set<RiskAction> actions = game.getPossibleActions();
+        Set<RiskAction> filteredActions = actions.stream()
+                // Always attack with maximum amount of troops.
+                .filter(action -> action.troops() == board.getMaxAttackingTroops(action.attackingId()))
+                // Only keep actions where attackingTroops > defendingTroops.
+                .filter(action -> board.getMaxAttackingTroops(action.attackingId()) >
+                        Math.min(2, board.getTerritoryTroops(action.defendingId())))
+                .collect(Collectors.toSet());
+        // Add endPhase() if no attack left.
+        if (filteredActions.size() == 0)
+            filteredActions = new HashSet<>(Collections.singletonList(RiskAction.endPhase()));
+
+        for (RiskAction action : filteredActions) {
+            int wins = 0;
+            int plays = 0;
+            // TODO bias more promising moves here
+            if (wins > plays) wins = plays;
+            tree.add(new McRiskNode(tree.getNode().getGame().doAction(action), wins, plays));
+
+        }
     }
 
-    private Set<RiskAction> chooseFortifyActions(Risk game) {
+    private void chooseOccupyActions(Tree<McRiskNode> tree) {
+        log.trace("Occupy Phase");
+        // TODO: Reinforce troops for continuation of attack?
+    }
+
+    private void chooseFortifyActions(Tree<McRiskNode> tree) {
         log.trace("Fortify Phase");
         // TODO: Move troops to conflict/reinforce occupied territories.
         // Simple approach: sort occupied territories descending by troop count.
         // If territory has conflict (any neighbor is occupied by different player) do nothing.
         // If territory has only neighbors of own player, move them.
-        return null;
     }
 
     /**
@@ -329,31 +364,33 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
     }
 
     private void mcExpansion(Tree<McRiskNode> tree) {
-        Set<RiskAction> possibleActions = null;
-        Risk game = (Risk) tree.getNode().getGame();
-        RiskBoard board = game.getBoard();
+        Risk baseGame = (Risk) tree.getNode().getGame();
+        Risk game = baseGame;
+        RiskBoard baseBoard = baseGame.getBoard();
+
+        if (game.getUtilityValue(game.getCurrentPlayer()) == 1) {
+            // current player has already won
+        }
 
         if (tree.isLeaf()) {
-            // TODO smarter expansion, don't add all
-            if (board.isReinforcementPhase()) {
-                possibleActions = chooseReinforcementActions(game);
-            } else if (board.isAttackPhase()) {
-                possibleActions = chooseAttackActions(game);
-            } else if (board.isOccupyPhase()) {
-                possibleActions = chooseOccupyActions(game);
-            } else if (board.isFortifyPhase()) {
-                possibleActions = chooseFortifyActions(game);
+            // Exclude engine players from heuristics.
+            if (baseGame.getCurrentPlayer() >= 0) {
+                if (baseBoard.isReinforcementPhase()) {
+                    chooseReinforcementActions(tree);
+                } else if (baseBoard.isAttackPhase()) {
+                    chooseAttackActions(tree);
+                } else if (baseBoard.isOccupyPhase()) {
+                    chooseOccupyActions(tree);
+                } else if (baseBoard.isFortifyPhase()) {
+                    chooseFortifyActions(tree);
+                }
             }
+            // TODO: add expansion logic for enemy player
             // Fallback
-            if (possibleActions == null) {
-                possibleActions = game.getPossibleActions();
-                // TODO: Remove RuntimeException on deployment.
-                // throw new RuntimeException("Phase unknown");
-            }
-
-
-            for (RiskAction possibleAction : possibleActions) {
-                tree.add(new McRiskNode(game, possibleAction));
+            if (tree.getChildren().isEmpty()) {
+                log.deb("Expansion via Fallback: adding all possible actions.");
+                for (RiskAction possibleAction : baseGame.getPossibleActions())
+                    tree.add(new McRiskNode(baseGame, possibleAction));
             }
         }
     }
@@ -376,14 +413,14 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
     }
 
     private boolean mcSimulation(Tree<McRiskNode> tree) {
-        Game<RiskAction, ?> game = tree.getNode().getGame();
+        Risk game = (Risk) tree.getNode().getGame();
         int depth = 0;
 
         while(!game.isGameOver() && (depth++ % 31 != 0 || !shouldStopComputation())) {
             if (game.getCurrentPlayer() < 0)
-                game = game.doAction();
+                game = (Risk) game.doAction();
             else
-                game = game.doAction(Util.selectRandom(game.getPossibleActions(), random));
+                game = (Risk) game.doAction(Util.selectRandom(game.getPossibleActions(), random));
         }
 
         return mcHasWon(game);
@@ -391,15 +428,15 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
 
     private boolean mcSimulation(Tree<McRiskNode> tree, long timeout) {
         long startTime = System.nanoTime();
-        Game<RiskAction, ?> game = tree.getNode().getGame();
+        Risk game = (Risk) tree.getNode().getGame();
         int depth = 0;
 
         while(!game.isGameOver() && System.nanoTime() - startTime <= timeout &&
                 (depth++ % 31 != 0 || !shouldStopComputation())) {
             if (game.getCurrentPlayer() < 0)
-                game = game.doAction();
+                game = (Risk) game.doAction();
             else
-                game = game.doAction(Util.selectRandom(game.getPossibleActions(), random));
+                game = (Risk) game.doAction(Util.selectRandom(game.getPossibleActions(), random));
         }
 
         return mcHasWon(game);
@@ -410,7 +447,7 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
      * @param game
      * @return
      */
-    private boolean mcHasWon(Game<RiskAction, ?> game) {
+    private boolean mcHasWon(Risk game) {
 
         // array with 1 for win and 0 otherwise
         double[] evaluation = game.getGameUtilityValue();
@@ -418,13 +455,23 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         // val = evaluation[playerId], n = evaluation.length, max = max(evaluation - val)
         // (val >= max? 1/n : 0) + (val > max? (n-1)/n : 0)
         //
-        // val <  max   => 0    -> Loose
-        // val == max   => 1/n  -> Tie
-        // val >  max   => 1    -> Win
+        // val <  max   => 0            -> Loose
+        // val == max   => 1/n aka 1/2  -> Tie
+        // val >  max   => 1            -> Win
         double score = Util.scoreOutOfUtility(evaluation, playerId);
 
         if (!game.isGameOver() && score > 0.0) {
-            evaluation = game.getGameHeuristicValue();
+            for (int i = 0; i < game.getNumberOfPlayers(); i++) {
+
+                evaluation[i] = game.getBoard().getNrOfTerritoriesOccupiedByPlayer(i) / 3;
+
+                for (int continent: game.getBoard().getContinentIds()) {
+                    if (continentConquered(i, continent, game)) {
+                        evaluation[i] += game.getBoard().getContinentBonus(continent);
+                    }
+                }
+            }
+            // calculate evaluation = territories / 3 + continentBonuses
             score = Util.scoreOutOfUtility(evaluation, playerId);
         }
 
@@ -433,6 +480,13 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
 
         // Return true for ~50% of all ties and every win
         return win || tie && random.nextBoolean();
+    }
+
+    private boolean continentConquered(int player, int continent, Risk game) {
+        RiskBoard board = game.getBoard();
+        return board.getContinents().containsKey(continent) && board.getTerritories().values().stream()
+                .filter(t -> t.getContinentId() == continent)
+                .allMatch(t -> t.getOccupantPlayerId() == player);
     }
 
     private void mcBackPropagation(Tree<McRiskNode> tree, boolean win) {
