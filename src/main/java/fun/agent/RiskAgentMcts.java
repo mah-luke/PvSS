@@ -114,17 +114,17 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         if (foundRoot) log._trace(", done.");
         else log._trace(", failed.");
 
-        log.tra_("Check if best move will eventually end game: ");
-        if (sortPromisingCandidates(mcTree, gameMcNodeMoveComparator.reversed())) {
-            log._trace("Yes");
-            return Collections
-                    .max(mcTree.getChildren(), gameMcTreeMoveComparator)
-                    .getNode()
-                    .getGame()
-                    .getPreviousAction();
-        }
+//        log.tra_("Check if best move will eventually end game: ");
+//        if (sortPromisingCandidates(mcTree, gameMcNodeMoveComparator.reversed())) {
+//            log._trace("Yes");
+//            return Collections
+//                    .max(mcTree.getChildren(), gameMcTreeMoveComparator)
+//                    .getNode()
+//                    .getGame()
+//                    .getPreviousAction();
+//        }
 
-        log._trace("No");
+ //       log._trace("No");
         log.debf_("MCTS with %d simulations at confidence %.1f%%",
                 mcTree.getNode().getPlays(),
                 Util.percentage(mcTree.getNode().getWins(), mcTree.getNode().getPlays())
@@ -213,7 +213,7 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         return null;
     }
 
-    private void chooseReinforcementActions(Tree<McRiskNode> tree) {
+    private void chooseReinforcementActions(Tree<McRiskNode> tree, Set<RiskAction> actions) {
         log.trace("Reinforcement Phase");
         // TODO: add front-line logic -> troops at conflict
         // Card trading is done in this phase
@@ -226,7 +226,6 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         // Hard-code South America, North America?
 
         Risk game = (Risk) tree.getNode().getGame();
-        Set<RiskAction> actions = game.getPossibleActions();
 
         if (game.getBoard().isPlayerStillAlive(-1)) // TODO: add logic for setup phase after opening book
             return;
@@ -275,7 +274,7 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         }
     }
 
-    private void chooseAttackActions(Tree<McRiskNode> tree) {
+    private void chooseAttackActions(Tree<McRiskNode> tree, Set<RiskAction> actions) {
         log.trace("Attack Phase");
         // TODO: add one continent preference logic
         // Prefer to conquer continents for bonus.
@@ -286,7 +285,6 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         Risk game = (Risk) tree.getNode().getGame();
         RiskBoard board = game.getBoard();
 
-        Set<RiskAction> actions = game.getPossibleActions();
         Set<RiskAction> filteredActions = actions.stream()
                 .filter(this::filterSpecialActions)
                 // Always attack with maximum amount of troops.
@@ -308,13 +306,12 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         }
     }
 
-    private void chooseOccupyActions(Tree<McRiskNode> tree) {
+    private void chooseOccupyActions(Tree<McRiskNode> tree, Set<RiskAction> actions) {
         log.trace("Occupy Phase");
         // TODO: Reinforce troops for continuation of attack?
 
         Risk game = (Risk) tree.getNode().getGame();
 
-        Set<RiskAction> actions = game.getPossibleActions();
         Set<RiskAction> filteredActions = new HashSet<>();
 
         Optional<RiskAction> optimalAction = actions.stream()
@@ -336,14 +333,13 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         }
     }
 
-    private void chooseFortifyActions(Tree<McRiskNode> tree) {
+    private void chooseFortifyActions(Tree<McRiskNode> tree, Set<RiskAction> actions) {
         log.trace("Fortify Phase");
         // Move troops from fortifyingId to fortifiedId.
 
         Risk game = (Risk) tree.getNode().getGame();
         RiskBoard board = game.getBoard();
 
-        Set<RiskAction> actions = game.getPossibleActions();
         // Filter out special actions.
          Set<RiskAction> specialActions = actions.stream()
                  .filter(action -> !filterSpecialActions(action))
@@ -451,10 +447,10 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         Risk baseGame = (Risk) tree.getNode().getGame();
         Risk game = baseGame;
         RiskBoard baseBoard = baseGame.getBoard();
+        Set<RiskAction> possibleActions = game.getPossibleActions();
 
 
-
-        if (game.getUtilityValue(game.getCurrentPlayer()) == 1 || game.getPossibleActions().size() == 0) {
+        if (game.getUtilityValue(game.getCurrentPlayer()) == 1) {
             // current player has already won
             return;
         }
@@ -463,20 +459,20 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
             // Exclude engine players from heuristics.
             if (baseGame.getCurrentPlayer() >= 0) {
                 if (baseBoard.isReinforcementPhase()) {
-                    chooseReinforcementActions(tree);
+                    chooseReinforcementActions(tree, possibleActions);
                 } else if (baseBoard.isAttackPhase()) {
-                    chooseAttackActions(tree);
+                    chooseAttackActions(tree, possibleActions);
                 } else if (baseBoard.isOccupyPhase()) {
-                    chooseOccupyActions(tree);
+                    chooseOccupyActions(tree, possibleActions);
                 } else if (baseBoard.isFortifyPhase()) {
-                    chooseFortifyActions(tree);
+                    chooseFortifyActions(tree, possibleActions);
                 }
             }
             // TODO: add expansion logic for enemy player
             // Fallback
             if (tree.getChildren().isEmpty()) {
                 log.deb("Expansion via Fallback: adding all possible actions.");
-                for (RiskAction possibleAction : baseGame.getPossibleActions())
+                for (RiskAction possibleAction : possibleActions)
                     tree.add(new McRiskNode(baseGame, possibleAction));
             }
         }
@@ -503,7 +499,7 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         Risk game = (Risk) tree.getNode().getGame();
         int depth = 0;
 
-        while(!game.isGameOver() && (depth++ % 31 != 0 || !shouldStopComputation())) {
+        while(!game.isGameOver() && (depth++ % 15 != 0 || !shouldStopComputation())) {
             if (game.getCurrentPlayer() < 0)
                 game = (Risk) game.doAction();
             else
