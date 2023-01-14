@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+
 public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         implements GameAgent<Risk, RiskAction> {
 
@@ -26,6 +27,7 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
 
      */
 
+    private static final int RUN_LIMIT = 1_000;
     private static int INSTANCE_NR_COUNTER;
     private Tree<McRiskNode> mcTree;
     private Comparator<Tree<McRiskNode>> gameMcTreeUCTComparator;
@@ -132,7 +134,7 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         int printThreshold = 1;
 
         // Run mcts tree creation loop until time runs out
-        while (!shouldStopComputation()) {
+        while (!shouldStopComputation() && mcTree.getNode().getPlays() < RUN_LIMIT) {
            if (looped++ % printThreshold == 0) {
                 log._deb("\r");
                 log.debf_("MCTS with %d simulations at confidence %.1f%%",
@@ -245,6 +247,7 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         int max;
         Optional<RiskAction> maxReinforcement = (actions.stream()
                 .filter(this::filterSpecialActions)
+                .filter(action -> game.getBoard().neighboringEnemyTerritories(action.reinforcedId()).size() > 0)
                 .max(Comparator.comparingInt(RiskAction::troops)));
 
         if (maxReinforcement.isPresent())
@@ -257,12 +260,11 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
                 .filter(action -> game.getBoard().neighboringEnemyTerritories(action.reinforcedId()).size() > 0)
                 // Reinforce some territories more heavily instead of spreading out.
                 .filter(action ->
-                        (action.troops() >= continentUtility(game)[game.getCurrentPlayer()] / territoryBorder.size()) ||
-                                (action.troops() == max))
+                        (action.troops() >= max / territoryBorder.size()))
                 .collect(Collectors.toSet());
         // Add all actions if no filteredAction left.
         if (filteredActions.size() == 0)
-            filteredActions.add(RiskAction.endPhase());
+            filteredActions.addAll(actions);
 
         for (RiskAction action : filteredActions) {
             int wins = 0;
@@ -322,7 +324,7 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
 
         if (filteredActions.size() == 0 ) {
             filteredActions.addAll(actions);
-            log.err("OccupyActions filteredActions.size() == 0");
+            log.error("OccupyActions filteredActions.size() == 0");
         }
 
         for (RiskAction action : filteredActions) {
@@ -361,7 +363,8 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         optimalAction.ifPresent(filteredActions::add);
 
         // Add special actions.
-        if (filteredActions.size() == 0) filteredActions.add(RiskAction.endPhase());
+        if (filteredActions.size() == 0)
+            filteredActions.add(RiskAction.endPhase());
 
         for (RiskAction action : filteredActions) {
             int wins = 0;
@@ -449,8 +452,11 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
         Risk game = baseGame;
         RiskBoard baseBoard = baseGame.getBoard();
 
-        if (game.getUtilityValue(game.getCurrentPlayer()) == 1) {
+
+
+        if (game.getUtilityValue(game.getCurrentPlayer()) == 1 || game.getPossibleActions().size() == 0) {
             // current player has already won
+            return;
         }
 
         if (tree.isLeaf()) {
