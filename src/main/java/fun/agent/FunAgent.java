@@ -356,7 +356,7 @@ public class FunAgent extends AbstractGameAgent<Risk, RiskAction>
      * @return The best action if an opening action is possible, otherwise null.
      */
     private RiskAction chooseOpeningAction(Risk game) {
-        log.info("Board not yet fully occupied");
+        log.debug("Board not yet fully occupied");
 
         // Check if continent has < 3 free territories and no territories of playerId.
         for (Integer continentId : game.getBoard().getContinentIds()) {
