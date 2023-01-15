@@ -27,7 +27,7 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
 
      */
 
-    private static final int RUN_LIMIT = 10_000;
+    private static final int RUN_LIMIT = 20_000;
     private static int INSTANCE_NR_COUNTER;
     private final Tree<McRiskNode> mcTree;
     private Comparator<Tree<McRiskNode>> gameMcTreeUCTComparator;
