@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  * A game agent for the board game Risk.
  * It utilizes MCTS with clever heuristics to prune the tree of possible action.
  */
-public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
+public class FunAgent extends AbstractGameAgent<Risk, RiskAction>
         implements GameAgent<Risk, RiskAction> {
 
     /*
@@ -46,11 +46,11 @@ public class RiskAgentMcts extends AbstractGameAgent<Risk, RiskAction>
     private Map<Integer, Set<RiskTerritory>> continentTerritories;
 
 
-    public RiskAgentMcts(Logger log) {
+    public FunAgent(Logger log) {
         this(Math.sqrt(2.0), log);
     }
 
-    public RiskAgentMcts(double exploitationConstant, Logger log) {
+    public FunAgent(double exploitationConstant, Logger log) {
         /* instantiates a AbstractGameAgent so that shouldStopComputation() returns true after 3/4ths of
          * the given time. However, if it can, it will try to compute at least 5 seconds.
          */

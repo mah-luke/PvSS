@@ -1,4 +1,4 @@
-package fun.agent;
+package run;
 
 import at.ac.tuwien.ifs.sge.engine.Logger;
 

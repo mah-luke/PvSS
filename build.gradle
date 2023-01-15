@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'at.ac.tuwien.ifs.sge'
-version '1.0.1'
+version '1.0'
 
 sourceCompatibility = 1.11
 
@@ -21,8 +21,8 @@ dependencies {
 jar {
     manifest {
         attributes 'Sge-Type': 'agent'
-        attributes 'Agent-Class': 'fun.agent.RiskAgentFun'
-        attributes 'Agent-Name': 'RiskAgentFun'
+        attributes 'Agent-Class': 'fun.agent.FunAgent'
+        attributes 'Agent-Name': 'fun'
     }
 }
 

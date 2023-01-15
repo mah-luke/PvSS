@@ -1,4 +1,4 @@
-package fun.agent;
+package run;
 
 import at.ac.tuwien.ifs.sge.agent.AbstractGameAgent;
 import at.ac.tuwien.ifs.sge.agent.GameAgent;
@@ -9,11 +9,11 @@ import at.ac.tuwien.ifs.sge.game.risk.board.RiskBoard;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-public class RiskAgentFun extends AbstractGameAgent<Risk, RiskAction> implements
+public class GreedyAgent extends AbstractGameAgent<Risk, RiskAction> implements
     GameAgent<Risk, RiskAction> {
 
 
-  public RiskAgentFun(Logger log) {
+  public GreedyAgent(Logger log) {
     /* instantiates a AbstractGameAgent so that shouldStopComputation() returns true after 3/4ths of
      * the given time. However, if it can, it will try to compute at least 5 seconds.
      */
