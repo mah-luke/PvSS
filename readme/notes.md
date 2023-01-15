@@ -1,10 +1,5 @@
-## Online resources
-- https://www.boardgamebeast.com/risk-board-game-strategies-south-america.html
-- https://www.tutorials.chymera.eu/blog/2014/09/18/1v1-risk-strategy/
-- https://www.tutorials.chymera.eu/blog/2014/07/23/per-attack-risk-dice-odds/
-- https://www4.stat.ncsu.edu/~jaosborn/research/RISK.pdf
-
 ## Dice Odds
+
 | Attacker | Defender | Event            | Ratio     | Probability |
 |---------:|---------:|:-----------------|:----------|:------------|
 |        1 |        1 | Defender loses 1 | 15/36     | 0.417       |
@@ -35,6 +30,7 @@
 Troops lost by the attacker per 1 unit of defender.
 
 ## Fight Outcome
+
 | A\D | 1     | 2     | 3     | 4     | 5     | 6     | 7     | 8     | 9     | 10    |
 |----:|:------|:------|:------|:------|:------|:------|:------|:------|:------|:------|
 |   1 | 0.417 | 0.106 | 0.027 | 0.007 | 0.002 | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
@@ -48,53 +44,3 @@ Troops lost by the attacker per 1 unit of defender.
 |   9 | 1.000 | 0.990 | 0.967 | 0.930 | 0.873 | 0.808 | 0.726 | 0.646 | 0.558 | 0.480 |
 |  10 | 1.000 | 0.994 | 0.981 | 0.954 | 0.916 | 0.861 | 0.800 | 0.724 | 0.650 | 0.568 |
 Probability that the attacker wins
-
-## Heuristics
-
-### Set-Up Phase (beginning of game)
-- [x] Try to go for South America, then North America
-- [x] Prevent continent bonus for enemy
-- [ ] Central America most important?
-- [ ] fine-tune priority of territories
-
-### Reinforcement Phase
-- [ ] Trade cards as early/late as possible?
-- [x] Reinforce troops at borders
-- [ ] Avoid reinforcing territories containing less than 3 troops
-- [ ] Reinforce regions connected to multiple enemy territories
-
-### Attack Phase
-- [x] Always attack if one has >=3 attackers, until troops left is close to 3.
-- [x] Best attacks are 3v1 and 2v1.
-- [ ] Avoid attacking territories next to large stacks.
-- [ ] Conquer at least one territory for card bonus.
-
-### Occupy Phase
-- [x] Move with how many troops?
-
-### Fortify Phase
-- [x] Move troops to conflict territories
-
-
-
-## Game Plan
-
-### Strategy
-#### Setup Phase
-- Focus on South America, then go for North America.
-- Prevent any continent bonus in the first round.
-
-#### Main Phase
-- Conquer South America, then North America.
-- Fortify Alaska heavily to prevent any breakthrough?
-
-
-### Tactics
-- Always reinforce borders
-- Never reinforce territory with only friendly neighbours.
-
-## Summary
-- PDF One-page description of the implemented methods, ideas, references, etc.
-- Name of the game engine
-- student contact data
-- any data that is necessary to identify the project as yours

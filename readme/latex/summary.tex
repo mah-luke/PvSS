@@ -1,0 +1,134 @@
+\documentclass[conference]{IEEEtran}
+
+% Packages
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{hyperref, url}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+   T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{Summary of Game Agent ``Fun'' for the game Risk}
+
+\author{
+    \IEEEauthorblockN{Lukas Mahler}
+    \IEEEauthorblockA{
+        student id 11908553\\
+        lukas.mahler@student.tuwien.ac.at
+    }
+    \and
+    \IEEEauthorblockN{Frank Ebel}
+    \IEEEauthorblockA{
+        student id 01429282\\
+        frank.ebel@student.tuwien.ac.at
+    }
+}
+
+\maketitle
+
+\begin{abstract}
+This document is a summary of the Game Agent ``Fun'' for the game Risk.
+It contains our heuristics and approach for Monte Carlo tree search (MCTS).
+\end{abstract}
+
+\begin{IEEEkeywords}
+MCTS, Game agent,  Game Tree Search
+\end{IEEEkeywords}
+
+\section*{Repository}
+
+Our source code can be found on \href{https://github.com/mah-luke/PvSS}{GitHub}.
+
+\section{Heuristics}
+
+The following subsections contain the heuristics we applied to prune the amount of possible actions
+depending on the phase of the game.
+
+\subsection{Set-Up Phase}
+\label{subsec:set-up-phase}
+
+We define the set-up phase as the phase in which players claim free territories at the beginning of the game.
+Our strategy is to first conquer South America and then North America or Africa \cite{web:south-america}.
+We therefore hard-coded the corresponding territory-ids into an array like an opening book.
+The agent will then try to claim the first free country from that list.
+We also check if the enemy is close to conquering a continent and occupy a territory to prevent any continent bonus.
+
+\subsection{Reinforcement Phase}
+\label{subsec:reinforcement phase}
+
+Since the troop bonus for trading in cards is incremental,
+we try to trade in as late as possible for the highest bonus \cite{web:1v1-risk-strategy}.
+When setting troops, we only consider territories which have a neighboring territory occupied by the enemy.
+We try to set more troops on fewer territories instead of spreading them out onto multiple countries.
+
+\subsection{Attack Phase}
+\label{subsec:attack-phase}
+
+For the attack phase we found a table \ref{tab:expexted-troop-loss}
+which contains the expected attacker troop loss per one defender unit.
+Since it is always beneficial to attack when this number is lower than unity, we only keep those actions.
+This also means that we attack territories which have more total troops than our attacking country \cite{osborne2003markov}.
+Another optimization we used is to always attack with the maximum number of possible troops
+since this will return higher odds of a win.
+
+\begin{table}[htbp]
+    \caption{Expected troop loss of the attacker \cite{web:per-attack-dice}.}
+    \label{tab:expexted-troop-loss}
+    \begin{center}
+        \begin{tabular}{|l|c|c|c|c|c|c|}
+            \hline
+            Attacker & \multicolumn{2}{|c|}{1} & \multicolumn{2}{|c|}{2} & \multicolumn{2}{|c|}{3} \\
+            \hline
+            Defender & 1 & 2 & 1 & 2 & 1 & 2 \\
+            \hline
+            Expected Loss & 1.40 & 2.93 & 0.73 & 1.14 & 0.52 & 0.95 \\
+            \hline
+        \end{tabular}
+    \end{center}
+\end{table}
+
+\subsection{Occupy Phase}
+\label{subsec:occupy-phase}
+
+Once a territory is conquered, we claim it with the maximum amount of troops in order to attack possible neighbors.
+Since the attacker has the advantage (\ref{subsec:attack-phase}) we want keep attacking as long as possible.
+
+\subsection{Fortify Phase}
+\label{subsec:foritfy-phase}
+
+In this phase we only move troops from a territory which has friendly neighbors exclusively.
+Only countries with enemy neighbors can get these troops.
+We always move with the maximum possible amount of troops.
+
+\section{MCTS}
+\label{sec:mcts}
+
+We limit the number of simulations to 20000.
+This is done since in the end game the simulation will mostly simulate consecutive dice losses
+which is very unlikely and just takes computational resources.
+Contrary to conventional MCTS we do not let the game play out until the end in the simulation phase,
+but to a maximum depth of 128 actions.
+If the game does not end within the mentioned number of actions, we calculate a heuristic value
+$h = \lfloor\# Territories/3\rfloor + continentBoni$
+which is the amount of troops for the reinforcement phase.
+Our testing showed that using this heuristic instead of complete play-out resulted in the agent winning in fewer actions.
+
+\section{Further Optimizations}
+
+There are a number of optimizations we wanted to implement but could not due to time constraints:
+\begin{itemize}
+    \item Calculate an attack path instead of attacking neighboring countries blindly.
+    \item When trading in cards, prefer territories with enemy neighbors for two troops extra.
+    \item Bias some nodes in the expansion phase instead of initializing them with zero plays and wins.
+    \item Calculate front lines and only reinforce one territory per front line.
+    \item Prefer 3v1 attacks before 3v2.
+\end{itemize}
+
+\bibliographystyle{unsrt}
+\bibliography{references}
+
+\end{document}
