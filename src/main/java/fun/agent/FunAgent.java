@@ -19,14 +19,6 @@ import java.util.stream.Collectors;
 public class FunAgent extends AbstractGameAgent<Risk, RiskAction>
         implements GameAgent<Risk, RiskAction> {
 
-    /*
-    TODO: rewrite MCTS to use scalar values instead of boolean for T
-
-    TODO:
-
-
-     */
-
     private static final int RUN_LIMIT = 1_000;
     private static int INSTANCE_NR_COUNTER;
     private final Tree<McRiskNode> mcTree;
