@@ -107,9 +107,10 @@ We always move with the maximum possible amount of troops.
 \section{MCTS}
 \label{sec:mcts}
 
-We limit the number of simulations to 20000.
-This is done since in the end game the simulation will mostly simulate consecutive dice losses
-which is very unlikely and just takes computational resources.
+We limit the number of simulations to 1000.
+This was done by playing the agent against itself and staying under the predefined memory limit of 2~GB total
+(1~GB per Agent) with the -Xmx option.
+
 Contrary to conventional MCTS we do not let the game play out until the end in the simulation phase,
 but to a maximum depth of 128 actions.
 If the game does not end within the mentioned number of actions, we calculate a heuristic value
