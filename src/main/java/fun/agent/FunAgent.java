@@ -613,6 +613,11 @@ public class FunAgent extends AbstractGameAgent<Risk, RiskAction>
     }
 
     @Override
+    public String toString() {
+        return "Fun";
+    }
+
+    @Override
     public void tearDown() {
         // Do some tear down after the MATCH
     }
