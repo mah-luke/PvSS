@@ -202,3 +202,10 @@ gradle-app.setting
 **/build/
 
 # End of https://www.gitignore.io/api/java,intellij+all,eclipse,gradle
+
+# LaTeX
+readme/latex/summary.aux
+readme/latex/summary.bbl
+readme/latex/summary.blg
+readme/latex/summary.out
+readme/latex/summary.pdf
